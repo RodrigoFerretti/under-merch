@@ -139,20 +139,7 @@ O projeto contribui para:
 
 ---
 
-## 7. CONCLUSÃO PARCIAL
-
-O PEX I estabeleceu uma base sólida para o desenvolvimento do UnderMerch. O levantamento detalhado de requisitos e a validação dos protótipos com os beneficiários garantem que o projeto está alinhado com as necessidades reais.
-
-A estrutura técnica inicial e a documentação preparada facilitarão o desenvolvimento nos próximos ciclos, permitindo evolução gradual e consistente do sistema.
-
----
-
-## 8. EVIDÊNCIAS
-
-### Fotos
-
-- Foto 1: Reunião de levantamento de requisitos com a banda
-- Foto 2: Protótipos sendo validados/Código inicial no computador
+## 7. EVIDÊNCIAS
 
 ### Documentos Anexos
 
