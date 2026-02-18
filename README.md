@@ -40,25 +40,13 @@ Democratizar o acesso a ferramentas profissionais de gestão para bandas indepen
 
 ## 🌍 Alinhamento com ODS (Objetivos de Desenvolvimento Sustentável)
 
-Este projeto está alinhado com os seguintes ODS da ONU:
+Este projeto está alinhado com o seguinte ODS da ONU:
 
 ### ODS 8 - Trabalho Decente e Crescimento Econômico
 
 - Promove a profissionalização de artistas independentes
 - Contribui para a sustentabilidade financeira de bandas
 - Fomenta o empreendedorismo cultural
-
-### ODS 9 - Indústria, Inovação e Infraestrutura
-
-- Democratiza o acesso a tecnologia de gestão
-- Oferece infraestrutura digital acessível
-- Promove inovação no setor cultural independente
-
-### ODS 10 - Redução das Desigualdades
-
-- Nivela o campo entre bandas independentes e grandes artistas
-- Oferece ferramentas profissionais gratuitamente
-- Remove barreiras tecnológicas e financeiras
 
 ## 💻 Arquitetura Técnica
 
