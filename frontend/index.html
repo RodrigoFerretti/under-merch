@@ -810,6 +810,19 @@
       flex-shrink: 0;
     }
 
+    /* === LOADING OVERLAY === */
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 350;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .loading-overlay.active { display: flex; }
+
     /* === IMAGE LIGHTBOX === */
     .lightbox-overlay {
       display: none;
@@ -1055,6 +1068,11 @@
     </div>
   </div>
 
+  <!-- LOADING OVERLAY -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="spinner"></div>
+  </div>
+
   <!-- IMAGE LIGHTBOX -->
   <div class="lightbox-overlay" id="lightbox">
     <img class="lightbox-img" id="lightbox-img" alt="">
@@ -1071,9 +1089,9 @@
 
     // === STATE ===
     const state = {
-      idToken: sessionStorage.getItem('idToken') || '',
-      email: sessionStorage.getItem('email') || '',
-      role: sessionStorage.getItem('role') || '',
+      idToken: localStorage.getItem('idToken') || '',
+      email: localStorage.getItem('email') || '',
+      role: localStorage.getItem('role') || '',
       products: [],
       skus: [],
       sales: [],
@@ -1178,6 +1196,10 @@
     function canStock() { return state.role === 'admin' || state.role === 'estoque'; }
     function isAdmin() { return state.role === 'admin'; }
 
+    // === LOADING OVERLAY ===
+    function showLoading() { document.getElementById('loading-overlay').classList.add('active'); }
+    function hideLoading() { document.getElementById('loading-overlay').classList.remove('active'); }
+
     // === TOAST ===
     let toastTimer = null;
     function showToast(message, type) {
@@ -1277,9 +1299,9 @@
         const data = await api('login');
         state.email = data.email;
         state.role = data.role;
-        sessionStorage.setItem('idToken', state.idToken);
-        sessionStorage.setItem('email', state.email);
-        sessionStorage.setItem('role', state.role);
+        localStorage.setItem('idToken', state.idToken);
+        localStorage.setItem('email', state.email);
+        localStorage.setItem('role', state.role);
         setupNav();
         await loadInitialData();
         showView('view-products');
@@ -1288,7 +1310,7 @@
         loginError.style.display = 'block';
         signinBtn.style.display = '';
         state.idToken = '';
-        sessionStorage.clear();
+        localStorage.clear();
       } finally {
         loginLoading.style.display = 'none';
       }
@@ -1306,7 +1328,7 @@
       state.salesLoaded = false;
       state.movementsLoaded = false;
       state.usersLoaded = false;
-      sessionStorage.clear();
+      localStorage.clear();
       showView('view-login');
       // Re-render the Google Sign-In button
       waitForGIS();
@@ -1755,7 +1777,7 @@
 
       const btn = document.getElementById('sale-confirm');
       btn.disabled = true;
-      btn.textContent = 'Registrando...';
+      showLoading();
 
       try {
         await api('registerSale', {
@@ -1769,14 +1791,13 @@
         await refreshProducts();
         renderProducts();
         if (state.currentProductId) renderProductDetail(state.currentProductId);
-        // Mark sales as stale so they reload on next visit
         state.salesLoaded = false;
         state.movementsLoaded = false;
       } catch (err) {
         showToast('Erro: ' + err.message, 'error');
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Confirmar Venda';
+        hideLoading();
       }
     }
 
@@ -1791,7 +1812,7 @@
 
       const btn = document.getElementById('product-confirm');
       btn.disabled = true;
-      btn.textContent = 'Salvando...';
+      showLoading();
 
       try {
         if (productModalMode === 'edit') {
@@ -1840,7 +1861,7 @@
               const img = extractDriveId(row.querySelector('.sku-img').value.trim());
               if (val) skus.push({ attribute: variantName, value: val, stock: stk, imageId: img });
             });
-            if (skus.length === 0) { showToast('Adicione ao menos uma variante.', 'error'); btn.disabled = false; btn.textContent = 'Salvar'; return; }
+            if (skus.length === 0) { showToast('Adicione ao menos uma variante.', 'error'); btn.disabled = false; hideLoading(); return; }
           } else {
             const stock = parseInt(document.getElementById('product-stock-input').value) || 0;
             const skuImg = extractDriveId(document.getElementById('product-sku-image-input').value.trim());
@@ -1865,7 +1886,7 @@
         showToast('Erro: ' + err.message, 'error');
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Salvar';
+        hideLoading();
       }
     }
 
@@ -1874,7 +1895,7 @@
 
       const btn = document.getElementById('stock-confirm');
       btn.disabled = true;
-      btn.textContent = 'Processando...';
+      showLoading();
 
       const reason = document.getElementById('stock-reason-input').value.trim();
 
@@ -1900,7 +1921,7 @@
         showToast('Erro: ' + err.message, 'error');
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Confirmar';
+        hideLoading();
       }
     }
 
@@ -1913,7 +1934,7 @@
 
       const btn = document.getElementById('user-confirm');
       btn.disabled = true;
-      btn.textContent = 'Adicionando...';
+      showLoading();
 
       try {
         await api('addUser', { email: email, role: role });
@@ -1925,12 +1946,13 @@
         showToast('Erro: ' + err.message, 'error');
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Adicionar';
+        hideLoading();
       }
     }
 
     async function handleRemoveUser(email) {
       openConfirmModal('Remover ' + email + '?', async () => {
+        showLoading();
         try {
           await api('removeUser', { email: email });
           showToast('Usuário removido.', 'success');
@@ -1938,6 +1960,8 @@
           loadUsers();
         } catch (err) {
           showToast('Erro: ' + err.message, 'error');
+        } finally {
+          hideLoading();
         }
       });
     }
