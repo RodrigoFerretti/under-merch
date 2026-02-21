@@ -18,26 +18,20 @@ function pixTlv(id: string, value: string): string {
 	return id + value.length.toString().padStart(2, "0") + value;
 }
 
-// Build-time defaults injected from GitHub secrets during deploy.
-// Script Properties can override these values if set manually.
+// Injected from GitHub secret PIX_KEY at deploy time.
 const PIX_KEY_DEFAULT = "%%PIX_KEY%%";
-const PIX_MERCHANT_NAME_DEFAULT = "%%PIX_MERCHANT_NAME%%";
-const PIX_MERCHANT_CITY_DEFAULT = "%%PIX_MERCHANT_CITY%%";
-
-function getPixProperty(key: string, buildDefault: string, fallback?: string): string {
-	const prop = PropertiesService.getScriptProperties().getProperty(key);
-	if (prop) return prop;
-	if (buildDefault && !buildDefault.startsWith("%%")) return buildDefault;
-	if (fallback) return fallback;
-	throw new Error(
-		`Propriedade "${key}" não configurada. Adicione como GitHub secret ou em Propriedades do script.`,
-	);
-}
 
 function generatePixPayload(amount: number): string {
-	const pixKey = getPixProperty("PIX_KEY", PIX_KEY_DEFAULT);
-	const merchantName = getPixProperty("PIX_MERCHANT_NAME", PIX_MERCHANT_NAME_DEFAULT, "UnderMerch").substring(0, 25);
-	const merchantCity = getPixProperty("PIX_MERCHANT_CITY", PIX_MERCHANT_CITY_DEFAULT, "SAO PAULO").substring(0, 15);
+	const pixKey =
+		PropertiesService.getScriptProperties().getProperty("PIX_KEY") ||
+		(PIX_KEY_DEFAULT.startsWith("%%") ? "" : PIX_KEY_DEFAULT);
+	if (!pixKey) {
+		throw new Error(
+			'PIX_KEY não configurada. Adicione como GitHub secret ou em Propriedades do script.',
+		);
+	}
+	const merchantName = "UnderMerch";
+	const merchantCity = "SAO PAULO";
 
 	const merchantAcctInfo =
 		pixTlv("00", "br.gov.bcb.pix") + pixTlv("01", pixKey);
