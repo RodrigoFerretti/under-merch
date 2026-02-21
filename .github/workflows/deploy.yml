@@ -23,4 +23,4 @@ jobs:
         run: echo '{"scriptId":"${{ secrets.SCRIPT_ID }}","rootDir":"appscript"}' > .clasp.json
 
       - name: Push to Apps Script
-        run: bunx clasp push
+        run: bunx clasp push --force
