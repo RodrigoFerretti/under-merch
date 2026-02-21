@@ -416,26 +416,35 @@ bun run login
 
 Um navegador abre pedindo permissões. Selecione **"Selecionar tudo"** e confirme. Após a autorização, as credenciais são salvas em `~/.clasprc.json`.
 
-### 8.2. Adicionar o secret no GitHub
+### 8.2. Adicionar os secrets no GitHub
 
-As credenciais do clasp precisam ser configuradas como secret no repositório para que o GitHub Actions consiga fazer deploy.
+O pipeline precisa de dois secrets:
+
+| Secret | Valor | Onde encontrar |
+|--------|-------|----------------|
+| `CLASP_CREDENTIALS` | Conteúdo do `~/.clasprc.json` | Gerado pelo `bun run login` (Etapa 8.1) |
+| `SCRIPT_ID` | ID do projeto Apps Script | Etapa 3.2 (Configurações do projeto → IDs) |
 
 #### Opção A — Via terminal (requer [GitHub CLI](https://cli.github.com/))
 
 ```bash
 gh secret set CLASP_CREDENTIALS < ~/.clasprc.json
+gh secret set SCRIPT_ID --body "SEU_SCRIPT_ID_AQUI"
 ```
 
 #### Opção B — Pelo navegador
 
 1. No repositório do GitHub, vá em **Settings → Secrets and variables → Actions**
 2. Clique em **"New repository secret"**
-3. Nome: `CLASP_CREDENTIALS`
-4. Valor: cole o conteúdo inteiro do arquivo `~/.clasprc.json`:
-   ```bash
-   cat ~/.clasprc.json
-   ```
-5. Clique em **"Add secret"**
+3. Adicione o primeiro secret:
+   - Nome: `CLASP_CREDENTIALS`
+   - Valor: cole o conteúdo inteiro do arquivo `~/.clasprc.json`:
+     ```bash
+     cat ~/.clasprc.json
+     ```
+4. Adicione o segundo secret:
+   - Nome: `SCRIPT_ID`
+   - Valor: o ID do script da Etapa 3.2
 
 ### 8.3. Workflow do GitHub Actions
 
@@ -444,9 +453,10 @@ O arquivo `.github/workflows/deploy.yml` já está configurado no repositório. 
 1. Roda quando há push em `appscript/**`
 2. Instala o Bun e as dependências
 3. Escreve o `CLASP_CREDENTIALS` em `~/.clasprc.json`
-4. Roda `bunx clasp push`
+4. Gera o `.clasp.json` com o `SCRIPT_ID`
+5. Roda `bunx clasp push`
 
-Após configurar o secret, qualquer push na pasta `appscript/` dispara o deploy automaticamente.
+Após configurar os secrets, qualquer push na pasta `appscript/` dispara o deploy automaticamente.
 
 ---
 

@@ -19,5 +19,8 @@ jobs:
       - name: Write clasp credentials
         run: echo '${{ secrets.CLASP_CREDENTIALS }}' > ~/.clasprc.json
 
+      - name: Write clasp config
+        run: echo '{"scriptId":"${{ secrets.SCRIPT_ID }}","rootDir":"appscript"}' > .clasp.json
+
       - name: Push to Apps Script
         run: bunx clasp push
