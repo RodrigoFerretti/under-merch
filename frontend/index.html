@@ -1231,7 +1231,7 @@
     }
 
     // === VIEW MANAGEMENT ===
-    function showView(viewId) {
+    function showView(viewId, skipLazyLoad) {
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       const view = document.getElementById(viewId);
       if (view) view.classList.add('active');
@@ -1255,9 +1255,11 @@
       updateFab();
 
       // Lazy load data
-      if (viewId === 'view-sales' && !state.salesLoaded) loadSales();
-      if (viewId === 'view-stock' && !state.movementsLoaded) loadStockData();
-      if (viewId === 'view-users' && !state.usersLoaded) loadUsers();
+      if (!skipLazyLoad) {
+        if (viewId === 'view-sales' && !state.salesLoaded) loadSales();
+        if (viewId === 'view-stock' && !state.movementsLoaded) loadStockData();
+        if (viewId === 'view-users' && !state.usersLoaded) loadUsers();
+      }
     }
 
     function updateFab() {
@@ -1341,11 +1343,26 @@
       if (state.idToken && state.email && state.role) {
         setupNav();
         const savedView = localStorage.getItem('currentView') || 'view-products';
-        showView(savedView);
-        showLoading();
+        showView(savedView, true);
+
+        // Show view-specific inline loading
+        const loadingHtml = function(msg) {
+          return '<div class="loading-state"><div class="spinner"></div><div>' + msg + '</div></div>';
+        };
+        if (savedView === 'view-products' || savedView === 'view-product-detail') {
+          document.getElementById('product-list').innerHTML = loadingHtml('Carregando produtos...');
+        } else if (savedView === 'view-sales') {
+          document.getElementById('sales-list').innerHTML = loadingHtml('Carregando vendas...');
+        } else if (savedView === 'view-stock') {
+          document.getElementById('stock-list').innerHTML = loadingHtml('Carregando estoque...');
+          document.getElementById('movements-list').innerHTML = '';
+        } else if (savedView === 'view-users') {
+          document.getElementById('users-list').innerHTML = loadingHtml('Carregando usuários...');
+        }
+
         try {
           await loadInitialData();
-          // Restore product detail if needed
+          // Load view-specific data
           if (savedView === 'view-product-detail') {
             const pid = localStorage.getItem('currentProductId');
             if (pid) {
@@ -1353,11 +1370,15 @@
             } else {
               showView('view-products');
             }
+          } else if (savedView === 'view-sales') {
+            await loadSales();
+          } else if (savedView === 'view-stock') {
+            await loadStockData();
+          } else if (savedView === 'view-users') {
+            await loadUsers();
           }
         } catch {
           // Token expired — api() already called logout() on 401
-        } finally {
-          hideLoading();
         }
         return;
       }
@@ -1389,15 +1410,18 @@
     }
 
     async function loadStockData() {
-      const el = document.getElementById('movements-list');
-      el.innerHTML = '<div class="loading-state"><div class="spinner"></div><div>Carregando movimentações...</div></div>';
+      const stockEl = document.getElementById('stock-list');
+      const movEl = document.getElementById('movements-list');
+      stockEl.innerHTML = '<div class="loading-state"><div class="spinner"></div><div>Carregando estoque...</div></div>';
+      movEl.innerHTML = '';
       try {
         const data = await api('getMovements');
         state.movements = data.movements || [];
         state.movementsLoaded = true;
         renderStock();
       } catch (err) {
-        el.innerHTML = '<div class="error-state">Erro ao carregar movimentações.</div>';
+        stockEl.innerHTML = '<div class="error-state">Erro ao carregar estoque.</div>';
+        movEl.innerHTML = '';
       }
     }
 
