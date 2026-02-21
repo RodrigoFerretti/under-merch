@@ -1,7 +1,15 @@
-function doGet(e: GoogleAppsScript.Events.DoGet): GoogleAppsScript.Content.TextOutput {
+function doPost(e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput {
 	try {
-		const action = e.parameter.action;
-		const idToken = e.parameter.idToken;
+		const payload = JSON.parse(e.postData.contents);
+		const { action, idToken } = payload;
+
+		if (action === "login") {
+			if (!idToken) {
+				return createJsonResponse({ error: "Token não fornecido." }, 401);
+			}
+			const user = authenticate(idToken);
+			return createJsonResponse(user);
+		}
 
 		if (!idToken) {
 			return createJsonResponse({ error: "Token não fornecido." }, 401);
@@ -26,35 +34,6 @@ function doGet(e: GoogleAppsScript.Events.DoGet): GoogleAppsScript.Content.TextO
 				checkPermission(user.role, "manageUsers");
 				return getUsuarios();
 
-			default:
-				return createJsonResponse({ error: `Ação desconhecida: ${action}` }, 400);
-		}
-	} catch (err) {
-		const message = err instanceof Error ? err.message : "Erro desconhecido.";
-		return createJsonResponse({ error: message }, 500);
-	}
-}
-
-function doPost(e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput {
-	try {
-		const payload = JSON.parse(e.postData.contents);
-		const { action, idToken } = payload;
-
-		if (action === "login") {
-			if (!idToken) {
-				return createJsonResponse({ error: "Token não fornecido." }, 401);
-			}
-			const user = authenticate(idToken);
-			return createJsonResponse(user);
-		}
-
-		if (!idToken) {
-			return createJsonResponse({ error: "Token não fornecido." }, 401);
-		}
-
-		const user = authenticate(idToken);
-
-		switch (action) {
 			case "createProduct":
 				checkPermission(user.role, "createProduct");
 				return createProduct(payload);
