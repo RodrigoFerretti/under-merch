@@ -347,7 +347,13 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      border: 2px solid transparent;
     }
+
+    .sku-row:active { background: #333; }
+    .sku-row.selected { border-color: #007aff; }
 
     .sku-label {
       font-size: 14px;
@@ -831,6 +837,10 @@
           <h1>UnderMerch</h1>
           <p>Gerenciamento de merch para shows</p>
           <div id="google-signin-btn"></div>
+          <div class="login-loading" id="login-loading" style="display:none">
+            <div class="spinner"></div>
+            <div style="margin-top:8px;color:#888;font-size:13px">Entrando...</div>
+          </div>
           <div class="login-error" id="login-error"></div>
         </div>
       </div>
@@ -926,7 +936,11 @@
         <input class="input" id="product-name-input" placeholder="Nome do produto">
         <textarea class="input" id="product-desc-input" placeholder="Descrição (opcional)"></textarea>
         <input class="input" id="product-price-input" type="number" step="0.01" min="0" placeholder="Preço (R$)">
-        <input class="input" id="product-image-input" placeholder="ID da imagem (Google Drive)">
+        <input class="input" id="product-image-input" placeholder="Imagem do produto (link ou ID do Google Drive)">
+        <div id="product-sku-images-section" style="display:none">
+          <div class="modal-label">Imagens das Variantes</div>
+          <div id="sku-image-rows"></div>
+        </div>
         <div id="product-sku-section">
           <div class="modal-label">Variantes</div>
           <div class="pill-group" style="margin-bottom:12px">
@@ -935,7 +949,7 @@
           </div>
           <div id="sku-simple-section">
             <input class="input" id="product-stock-input" type="number" min="0" value="0" placeholder="Estoque inicial">
-            <input class="input" id="product-sku-image-input" placeholder="ID da imagem do SKU (Google Drive)">
+            <input class="input" id="product-sku-image-input" placeholder="Imagem do SKU (link ou ID do Drive)">
           </div>
           <div id="sku-variants-section" style="display:none">
             <div id="sku-rows"></div>
@@ -1100,9 +1114,17 @@
       return '';
     }
 
+    function extractDriveId(input) {
+      if (!input) return '';
+      // Match /d/FILE_ID or id=FILE_ID from full Drive URLs
+      const match = input.match(/\/d\/([a-zA-Z0-9_-]+)/) || input.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      return match ? match[1] : input;
+    }
+
     function imageUrl(imageId, size) {
       if (!imageId) return '';
-      return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(imageId) + '&sz=w' + (size || 200);
+      const id = extractDriveId(imageId);
+      return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w' + (size || 200);
     }
 
     function productImageTag(imageId, cls, size) {
@@ -1203,7 +1225,11 @@
 
     async function handleCredentialResponse(response) {
       const loginError = document.getElementById('login-error');
+      const loginLoading = document.getElementById('login-loading');
+      const signinBtn = document.getElementById('google-signin-btn');
       loginError.style.display = 'none';
+      signinBtn.style.display = 'none';
+      loginLoading.style.display = '';
       try {
         state.idToken = response.credential;
         const data = await api('login');
@@ -1219,8 +1245,11 @@
       } catch (err) {
         loginError.textContent = 'Erro ao fazer login: ' + err.message;
         loginError.style.display = 'block';
+        signinBtn.style.display = '';
         state.idToken = '';
         sessionStorage.clear();
+      } finally {
+        loginLoading.style.display = 'none';
       }
     }
 
@@ -1377,8 +1406,7 @@
       skus.forEach(sku => {
         const label = showVariants ? escapeHtml((sku.attribute ? sku.attribute + ': ' : '') + (sku.value || '')) : 'Estoque total';
         const stock = Number(sku.stock) || 0;
-        const skuClickable = sku.imageId ? ' style="cursor:pointer"' : '';
-        html += '<div class="sku-row" data-sku-img="' + (sku.imageId || '') + '"' + skuClickable + '>';
+        html += '<div class="sku-row" data-sku-id="' + sku.id + '" data-sku-img="' + (sku.imageId || '') + '">';
         html += '<span class="sku-label">' + (sku.imageId ? '<span style="display:inline-block;width:24px;height:24px;border-radius:4px;overflow:hidden;vertical-align:middle;margin-right:6px;background:#3a3a3a"><img src="' + imageUrl(sku.imageId, 48) + '" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.display=\'none\'" alt=""></span>' : '') + label + '</span>';
         html += '<div class="sku-right">';
         html += '<span class="sku-stock ' + stockBadgeClass(stock) + '">' + stock + '</span>';
@@ -1623,7 +1651,24 @@
         document.getElementById('product-desc-input').value = p.description || '';
         document.getElementById('product-price-input').value = p.price || '';
         document.getElementById('product-image-input').value = p.imageId || '';
+        // Show SKU image editing
+        const skus = getProductSkus(productId);
+        const skuImgSection = document.getElementById('product-sku-images-section');
+        const skuImgRows = document.getElementById('sku-image-rows');
+        if (skus.length > 0) {
+          skuImgSection.style.display = '';
+          skuImgRows.innerHTML = skus.map(sku => {
+            const label = hasVariants(productId) ? escapeHtml((sku.attribute ? sku.attribute + ': ' : '') + (sku.value || '')) : 'SKU padrão';
+            return '<div class="sku-form-row" data-sku-id="' + sku.id + '">'
+              + '<span style="font-size:13px;color:#ccc;min-width:80px">' + label + '</span>'
+              + '<input class="input sku-edit-img" value="' + escapeHtml(sku.imageId || '') + '" placeholder="Imagem (link ou ID do Drive)">'
+              + '</div>';
+          }).join('');
+        } else {
+          skuImgSection.style.display = 'none';
+        }
       } else {
+        document.getElementById('product-sku-images-section').style.display = 'none';
         document.getElementById('product-name-input').value = '';
         document.getElementById('product-desc-input').value = '';
         document.getElementById('product-price-input').value = '';
@@ -1648,7 +1693,7 @@
       row.innerHTML = '<input class="input sku-attr" placeholder="Atributo (ex: Tamanho)">'
         + '<input class="input sku-val" placeholder="Valor (ex: M)">'
         + '<input class="input sku-stk" type="number" min="0" value="0" placeholder="Qtd">'
-        + '<input class="input sku-img" placeholder="Imagem ID" style="max-width:100px">'
+        + '<input class="input sku-img" placeholder="Imagem" style="max-width:100px">'
         + '<button class="btn-remove-row">&times;</button>';
       container.appendChild(row);
     }
@@ -1702,7 +1747,7 @@
       const name = document.getElementById('product-name-input').value.trim();
       const description = document.getElementById('product-desc-input').value.trim();
       const priceVal = document.getElementById('product-price-input').value;
-      const imageId = document.getElementById('product-image-input').value.trim();
+      const imageId = extractDriveId(document.getElementById('product-image-input').value.trim());
 
       if (!name) { showToast('Nome é obrigatório.', 'error'); return; }
       if (!priceVal || Number(priceVal) <= 0) { showToast('Preço inválido.', 'error'); return; }
@@ -1713,6 +1758,7 @@
 
       try {
         if (productModalMode === 'edit') {
+          // Update product
           await api('updateProduct', {
             id: productEditId,
             name: name,
@@ -1720,6 +1766,17 @@
             price: Number(priceVal),
             imageId: imageId,
           });
+          // Update SKU images
+          const skuImgRows = document.querySelectorAll('#sku-image-rows .sku-form-row');
+          for (const row of skuImgRows) {
+            const skuId = row.dataset.skuId;
+            const imgVal = row.querySelector('.sku-edit-img').value.trim();
+            const currentSku = state.skus.find(s => s.id === skuId);
+            const extractedImg = extractDriveId(imgVal);
+            if (currentSku && (extractedImg || '') !== (currentSku.imageId || '')) {
+              await api('updateSku', { id: skuId, imageId: extractedImg });
+            }
+          }
           showToast('Produto atualizado!', 'success');
         } else {
           // Build SKUs
@@ -1731,13 +1788,13 @@
               const attr = row.querySelector('.sku-attr').value.trim();
               const val = row.querySelector('.sku-val').value.trim();
               const stk = parseInt(row.querySelector('.sku-stk').value) || 0;
-              const img = row.querySelector('.sku-img').value.trim();
+              const img = extractDriveId(row.querySelector('.sku-img').value.trim());
               if (val) skus.push({ attribute: attr, value: val, stock: stk, imageId: img });
             });
             if (skus.length === 0) { showToast('Adicione ao menos uma variante.', 'error'); btn.disabled = false; btn.textContent = 'Salvar'; return; }
           } else {
             const stock = parseInt(document.getElementById('product-stock-input').value) || 0;
-            const skuImg = document.getElementById('product-sku-image-input').value.trim();
+            const skuImg = extractDriveId(document.getElementById('product-sku-image-input').value.trim());
             skus.push({ attribute: '', value: '', stock: stock, imageId: skuImg });
           }
 
@@ -1899,13 +1956,19 @@
           handleDeactivateProduct(state.currentProductId);
           return;
         }
-        // SKU row click to preview image
+        // SKU row click to select and preview image
         const skuRow = e.target.closest('.sku-row');
-        if (skuRow && !e.target.closest('.sku-btn') && skuRow.dataset.skuImg) {
-          const heroEl = document.getElementById('detail-hero-img');
-          if (heroEl) {
-            detailImageId = skuRow.dataset.skuImg;
-            heroEl.outerHTML = '<img src="' + imageUrl(detailImageId, 600) + '" class="detail-image" id="detail-hero-img" onerror="this.outerHTML=\'<div class=&quot;detail-image-placeholder&quot; id=&quot;detail-hero-img&quot;></div>\'" alt="">';
+        if (skuRow && !e.target.closest('.sku-btn')) {
+          // Highlight selected
+          document.querySelectorAll('#product-detail-content .sku-row').forEach(r => r.classList.remove('selected'));
+          skuRow.classList.add('selected');
+          // Switch hero image if SKU has one
+          if (skuRow.dataset.skuImg) {
+            const heroEl = document.getElementById('detail-hero-img');
+            if (heroEl) {
+              detailImageId = skuRow.dataset.skuImg;
+              heroEl.outerHTML = '<img src="' + imageUrl(detailImageId, 600) + '" class="detail-image" id="detail-hero-img" onerror="this.outerHTML=\'<div class=&quot;detail-image-placeholder&quot; id=&quot;detail-hero-img&quot;></div>\'" alt="">';
+            }
           }
           return;
         }

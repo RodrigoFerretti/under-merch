@@ -413,11 +413,15 @@ Abra o `frontend/index.html` no navegador. Se estiver usando o VS Code, use a ex
 
 ### 7.1. Ativar o GitHub Pages
 
+Como o frontend está na pasta `/frontend` (e o GitHub Pages via branch só suporta `/` ou `/docs`), usamos um workflow do GitHub Actions para deploy.
+
+O repositório já inclui o workflow `.github/workflows/pages.yml` que faz o deploy automaticamente a cada push na pasta `frontend/`.
+
+Para ativar:
+
 1. No repositório do GitHub, vá em **Settings → Pages**
-2. Em **Source**, selecione **"Deploy from a branch"**
-3. Em **Branch**, selecione `master` e a pasta `/frontend`
-   - Se a opção de pasta `/frontend` não estiver disponível, selecione `/ (root)` e mova o `index.html` para a raiz, ou use GitHub Actions (Etapa 8)
-4. Clique em **"Save"**
+2. Em **Source**, selecione **"GitHub Actions"**
+3. O deploy será disparado automaticamente no próximo push que altere `frontend/`
 
 ### 7.2. Acessar o site
 
