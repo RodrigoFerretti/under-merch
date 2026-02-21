@@ -1349,13 +1349,15 @@
         const loadingHtml = function(msg) {
           return '<div class="loading-state"><div class="spinner"></div><div>' + msg + '</div></div>';
         };
-        if (savedView === 'view-products' || savedView === 'view-product-detail') {
+        if (savedView === 'view-products') {
           document.getElementById('product-list').innerHTML = loadingHtml('Carregando produtos...');
+        } else if (savedView === 'view-product-detail') {
+          document.getElementById('product-detail-content').innerHTML = loadingHtml('Carregando produto...');
         } else if (savedView === 'view-sales') {
           document.getElementById('sales-list').innerHTML = loadingHtml('Carregando vendas...');
         } else if (savedView === 'view-stock') {
           document.getElementById('stock-list').innerHTML = loadingHtml('Carregando estoque...');
-          document.getElementById('movements-list').innerHTML = '';
+          document.getElementById('movements-list').innerHTML = loadingHtml('Carregando movimentações...');
         } else if (savedView === 'view-users') {
           document.getElementById('users-list').innerHTML = loadingHtml('Carregando usuários...');
         }
@@ -1413,7 +1415,7 @@
       const stockEl = document.getElementById('stock-list');
       const movEl = document.getElementById('movements-list');
       stockEl.innerHTML = '<div class="loading-state"><div class="spinner"></div><div>Carregando estoque...</div></div>';
-      movEl.innerHTML = '';
+      movEl.innerHTML = '<div class="loading-state"><div class="spinner"></div><div>Carregando movimentações...</div></div>';
       try {
         const data = await api('getMovements');
         state.movements = data.movements || [];
@@ -1421,7 +1423,7 @@
         renderStock();
       } catch (err) {
         stockEl.innerHTML = '<div class="error-state">Erro ao carregar estoque.</div>';
-        movEl.innerHTML = '';
+        movEl.innerHTML = '<div class="error-state">Erro ao carregar movimentações.</div>';
       }
     }
 
