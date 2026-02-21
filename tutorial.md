@@ -91,11 +91,11 @@ A planilha já vem com uma aba chamada "Página1". Renomeie-a e crie as demais:
 
 Em cada aba, preencha a **linha 1** com os cabeçalhos abaixo:
 
-**Aba `Users`** (colunas A até C):
+**Aba `Users`** (colunas A até D):
 
-| A | B | C |
-|---|---|---|
-| email | role | createdAt |
+| A | B | C | D |
+|---|---|---|---|
+| email | role | createdAt | lastAccess |
 
 **Aba `Products`** (colunas A até H):
 
@@ -127,9 +127,9 @@ Em cada aba, preencha a **linha 1** com os cabeçalhos abaixo:
 
 Na aba `Users`, preencha a **linha 2**:
 
-| A | B | C |
-|---|---|---|
-| seu-email@gmail.com | admin | 2026-02-20 |
+| A | B | C | D |
+|---|---|---|---|
+| seu-email@gmail.com | admin | 2026-02-20 | |
 
 Substitua `seu-email@gmail.com` pelo e-mail da conta Google que você vai usar para acessar o sistema.
 

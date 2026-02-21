@@ -533,6 +533,12 @@
     .role-vendas { background: rgba(52,199,89,0.2); color: #34c759; }
     .role-estoque { background: rgba(0,122,255,0.15); color: #007aff; }
 
+    .user-last-access {
+      font-size: 11px;
+      color: #666;
+      margin-top: 2px;
+    }
+
     .btn-remove-user {
       background: rgba(255,59,48,0.15);
       color: #ff3b30;
@@ -1631,11 +1637,19 @@
         return;
       }
 
-      el.innerHTML = state.users.map(u => {
+      const sorted = state.users.slice().sort((a, b) => {
+        const dateA = a.lastAccess ? new Date(a.lastAccess) : new Date(0);
+        const dateB = b.lastAccess ? new Date(b.lastAccess) : new Date(0);
+        return dateB - dateA;
+      });
+
+      el.innerHTML = sorted.map(u => {
+        const lastAccessText = u.lastAccess ? formatDate(u.lastAccess) : 'Nunca acessou';
         return '<div class="user-item">'
           + '<div class="user-info">'
           + '<div class="user-email">' + escapeHtml(u.email) + '</div>'
           + '<span class="role-badge role-' + u.role + '">' + escapeHtml(u.role) + '</span>'
+          + '<div class="user-last-access">' + lastAccessText + '</div>'
           + '</div>'
           + (u.email !== state.email
             ? '<button class="btn-remove-user" data-email="' + escapeHtml(u.email) + '">Remover</button>'

@@ -21,7 +21,7 @@ GitHub Pages (Frontend)  →  Google Apps Script (API)  →  Google Sheets (Data
 
 ## Auth Flow (Google Sign-In)
 
-The Usuarios tab has only `email | role | createdAt` (no passwords).
+The Usuarios tab has only `email | role | createdAt | lastAccess` (no passwords).
 
 1. Frontend loads Google Identity Services library (`accounts.google.com/gsi/client`)
 2. User clicks "Sign in with Google" → OAuth popup → returns ID token (JWT)
@@ -36,7 +36,7 @@ The Usuarios tab has only `email | role | createdAt` (no passwords).
 
 ## Database Schema (Google Sheets Tabs)
 
-**Usuarios**: email | role | createdAt
+**Usuarios**: email | role | createdAt | lastAccess
 **Produtos**: id | nome | descricao | preco | estoque | imagemId | ativo | createdAt | updatedAt
 **Movimentacoes**: id | produtoId | tipo | quantidade | motivo | usuarioEmail | createdAt
 **Vendas**: id | produtoId | quantidade | precoUnitario | total | metodoPagamento | usuarioEmail | createdAt
