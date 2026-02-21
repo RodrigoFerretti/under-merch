@@ -1128,6 +1128,8 @@
 
     let confirmCallback = null;
 
+    let renewalTimer = null;
+
     // === UTILITIES ===
     function escapeHtml(text) {
       const div = document.createElement('div');
@@ -1218,7 +1220,7 @@
     }
 
     // === API ===
-    async function api(action, params) {
+    async function api(action, params, _retried) {
       const body = Object.assign({ action: action, idToken: state.idToken }, params || {});
       const response = await fetch(APPS_SCRIPT_URL, {
         method: 'POST',
@@ -1226,6 +1228,12 @@
       });
       const data = await response.json();
       if (data.statusCode === 401) {
+        if (!_retried) {
+          var renewed = await renewToken();
+          if (renewed) {
+            return api(action, params, true);
+          }
+        }
         logout();
         showToast('Sessão expirada. Faça login novamente.', 'error');
         throw new Error('Unauthorized');
@@ -1291,11 +1299,48 @@
       google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: handleCredentialResponse,
+        auto_select: true,
       });
       google.accounts.id.renderButton(
         document.getElementById('google-signin-btn'),
         { theme: 'filled_blue', size: 'large', width: 280 }
       );
+    }
+
+    function scheduleRenewal() {
+      clearTimeout(renewalTimer);
+      try {
+        const parts = state.idToken.split('.');
+        if (parts.length !== 3) return;
+        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+        const expiresAt = payload.exp * 1000;
+        const renewIn = expiresAt - Date.now() - (5 * 60 * 1000);
+        if (renewIn <= 0) {
+          renewToken();
+          return;
+        }
+        renewalTimer = setTimeout(renewToken, renewIn);
+      } catch (e) {}
+    }
+
+    function renewToken() {
+      return new Promise(function(resolve) {
+        google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: function(response) {
+            state.idToken = response.credential;
+            localStorage.setItem('idToken', state.idToken);
+            scheduleRenewal();
+            resolve(true);
+          },
+          auto_select: true,
+        });
+        google.accounts.id.prompt(function(notification) {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            resolve(false);
+          }
+        });
+      });
     }
 
     async function handleCredentialResponse(response) {
@@ -1313,6 +1358,7 @@
         localStorage.setItem('idToken', state.idToken);
         localStorage.setItem('email', state.email);
         localStorage.setItem('role', state.role);
+        scheduleRenewal();
         setupNav();
         await loadInitialData();
         showView('view-products');
@@ -1328,6 +1374,7 @@
     }
 
     function logout() {
+      clearTimeout(renewalTimer);
       state.idToken = '';
       state.email = '';
       state.role = '';
@@ -1347,6 +1394,7 @@
 
     async function checkSession() {
       if (state.idToken && state.email && state.role) {
+        scheduleRenewal();
         setupNav();
         const savedView = localStorage.getItem('currentView') || 'view-products';
         showView(savedView, true);
