@@ -24,8 +24,11 @@ jobs:
       - name: Write clasp config
         run: echo '{"scriptId":"${{ secrets.SCRIPT_ID }}","rootDir":"appscript"}' > .clasp.json
 
-      - name: Inject PIX key
-        run: sed -i 's/%%PIX_KEY%%/${{ secrets.PIX_KEY }}/' appscript/pix.ts
+      - name: Inject PIX secrets
+        run: |
+          sed -i 's/%%PIX_KEY%%/${{ secrets.PIX_KEY }}/' appscript/pix.ts
+          sed -i 's/%%PIX_MERCHANT_NAME%%/${{ secrets.PIX_MERCHANT_NAME }}/' appscript/pix.ts
+          sed -i 's/%%PIX_MERCHANT_CITY%%/${{ secrets.PIX_MERCHANT_CITY }}/' appscript/pix.ts
 
       - name: Push to Apps Script
         run: bunx clasp push --force

@@ -18,20 +18,24 @@ function pixTlv(id: string, value: string): string {
 	return id + value.length.toString().padStart(2, "0") + value;
 }
 
-// Injected from GitHub secret PIX_KEY at deploy time.
+// Injected from GitHub secrets at deploy time.
 const PIX_KEY_DEFAULT = "%%PIX_KEY%%";
+const PIX_MERCHANT_NAME_DEFAULT = "%%PIX_MERCHANT_NAME%%";
+const PIX_MERCHANT_CITY_DEFAULT = "%%PIX_MERCHANT_CITY%%";
+
+function getPixSecret(key: string, buildDefault: string): string {
+	const prop = PropertiesService.getScriptProperties().getProperty(key);
+	if (prop) return prop;
+	if (buildDefault && !buildDefault.startsWith("%%")) return buildDefault;
+	throw new Error(
+		`${key} não configurada. Adicione como GitHub secret ou em Propriedades do script.`,
+	);
+}
 
 function generatePixPayload(amount: number): string {
-	const pixKey =
-		PropertiesService.getScriptProperties().getProperty("PIX_KEY") ||
-		(PIX_KEY_DEFAULT.startsWith("%%") ? "" : PIX_KEY_DEFAULT);
-	if (!pixKey) {
-		throw new Error(
-			'PIX_KEY não configurada. Adicione como GitHub secret ou em Propriedades do script.',
-		);
-	}
-	const merchantName = "UnderMerch";
-	const merchantCity = "SAO PAULO";
+	const pixKey = getPixSecret("PIX_KEY", PIX_KEY_DEFAULT);
+	const merchantName = getPixSecret("PIX_MERCHANT_NAME", PIX_MERCHANT_NAME_DEFAULT).substring(0, 25);
+	const merchantCity = getPixSecret("PIX_MERCHANT_CITY", PIX_MERCHANT_CITY_DEFAULT).substring(0, 15);
 
 	const merchantAcctInfo =
 		pixTlv("00", "br.gov.bcb.pix") + pixTlv("01", pixKey);
