@@ -25,12 +25,12 @@ function generateId(prefix: string, sheetName: string): string {
 	const lastRow = sheet.getLastRow();
 
 	if (lastRow <= 1) {
-		return `${prefix}001`;
+		return `${prefix}0001`;
 	}
 
 	const lastId = String(sheet.getRange(lastRow, 1).getValue());
 	const num = Number.parseInt(lastId.replace(/\D/g, ""), 10) || 0;
-	return `${prefix}${String(num + 1).padStart(3, "0")}`;
+	return `${prefix}${String(num + 1).padStart(4, "0")}`;
 }
 
 function now(): string {
