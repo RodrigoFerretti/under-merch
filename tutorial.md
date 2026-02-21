@@ -286,7 +286,14 @@ bunx clasp login
 
 Um navegador abre para autenticar com sua conta Google. Após a autorização, o clasp salva as credenciais localmente em `~/.clasprc.json`.
 
-### 4.5. Configurar o `.clasp.json`
+### 4.5. Ativar a Apps Script API
+
+O clasp precisa da Apps Script API habilitada para enviar código. Sem isso, o `clasp push` falha.
+
+1. Acesse [script.google.com/home/usersettings](https://script.google.com/home/usersettings)
+2. Em **"Google Apps Script API"**, clique no toggle para mudar de **"Desativado"** para **"Ativado"**
+
+### 4.6. Configurar o `.clasp.json`
 
 Edite o arquivo `.clasp.json` na raiz do projeto e coloque o ID do script que você anotou na Etapa 3.2:
 
@@ -297,7 +304,7 @@ Edite o arquivo `.clasp.json` na raiz do projeto e coloque o ID do script que vo
 }
 ```
 
-### 4.6. Fazer push do código
+### 4.7. Fazer push do código
 
 ```bash
 bunx clasp push
@@ -307,7 +314,7 @@ O clasp transpila os arquivos `.ts` para `.gs` e envia para o Google Apps Script
 
 > **Dica:** Use `bunx clasp push --watch` para fazer push automático a cada salvamento.
 
-### 4.7. Configurar o ID da planilha no código
+### 4.8. Configurar o ID da planilha no código
 
 No arquivo `appscript/utils.ts`, localize a constante `SPREADSHEET_ID` e substitua pelo ID da sua planilha (da Etapa 1.5):
 
