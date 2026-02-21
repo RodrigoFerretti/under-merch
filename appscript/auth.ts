@@ -47,6 +47,7 @@ function checkAuth(email: string): UserInfo {
 
 	for (let i = 1; i < data.length; i++) {
 		if (data[i][0] === email) {
+			sheet.getRange(i + 1, 4).setValue(now());
 			return { email: data[i][0], role: data[i][1] };
 		}
 	}

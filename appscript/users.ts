@@ -6,6 +6,7 @@ function getUsers(): GoogleAppsScript.Content.TextOutput {
 		email: row[0],
 		role: row[1],
 		createdAt: row[2],
+		lastAccess: row[3] || "",
 	}));
 
 	return createJsonResponse({ users });
@@ -37,7 +38,7 @@ function addUser(payload: Record<string, unknown>): GoogleAppsScript.Content.Tex
 		}
 	}
 
-	sheet.appendRow([email, role, now()]);
+	sheet.appendRow([email, role, now(), ""]);
 
 	return createJsonResponse({ success: true });
 }
