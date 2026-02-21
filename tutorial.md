@@ -59,7 +59,7 @@ O repositório inclui um arquivo Excel pronto com todas as abas e cabeçalhos:
 4. Selecione **"Substituir planilha"** e clique em **"Importar dados"**
 5. Renomeie a planilha para **"UnderMerch"** (clique no título)
 
-As 4 abas (`Usuarios`, `Produtos`, `Movimentacoes`, `Vendas`) já estarão criadas com os cabeçalhos corretos.
+As 4 abas (`Users`, `Products`, `Movements`, `Sales`) já estarão criadas com os cabeçalhos corretos.
 
 Pule para a seção **1.4** abaixo.
 
@@ -78,47 +78,47 @@ Pule para a seção **1.4** abaixo.
 
 A planilha já vem com uma aba chamada "Página1". Renomeie-a e crie as demais:
 
-1. **Clique duplo** na aba "Página1" → renomeie para `Usuarios`
+1. **Clique duplo** na aba "Página1" → renomeie para `Users`
 2. Clique no **"+"** no canto inferior esquerdo para criar novas abas:
-   - `Produtos`
-   - `Movimentacoes`
-   - `Vendas`
+   - `Products`
+   - `Movements`
+   - `Sales`
 
-**Importante:** Os nomes precisam ser exatamente esses (sem acento, maiúscula inicial).
+**Importante:** Os nomes precisam ser exatamente esses (maiúscula inicial).
 
 #### 1.3. Adicionar os cabeçalhos
 
 Em cada aba, preencha a **linha 1** com os cabeçalhos abaixo:
 
-**Aba `Usuarios`** (colunas A até C):
+**Aba `Users`** (colunas A até C):
 
 | A | B | C |
 |---|---|---|
 | email | role | createdAt |
 
-**Aba `Produtos`** (colunas A até I):
+**Aba `Products`** (colunas A até I):
 
 | A | B | C | D | E | F | G | H | I |
 |---|---|---|---|---|---|---|---|---|
-| id | nome | descricao | preco | estoque | imagemId | ativo | createdAt | updatedAt |
+| id | name | description | price | stock | imageId | active | createdAt | updatedAt |
 
-**Aba `Movimentacoes`** (colunas A até G):
+**Aba `Movements`** (colunas A até G):
 
 | A | B | C | D | E | F | G |
 |---|---|---|---|---|---|---|
-| id | produtoId | tipo | quantidade | motivo | usuarioEmail | createdAt |
+| id | productId | type | quantity | reason | userEmail | createdAt |
 
-**Aba `Vendas`** (colunas A até H):
+**Aba `Sales`** (colunas A até H):
 
 | A | B | C | D | E | F | G | H |
 |---|---|---|---|---|---|---|---|
-| id | produtoId | quantidade | precoUnitario | total | metodoPagamento | usuarioEmail | createdAt |
+| id | productId | quantity | unitPrice | total | paymentMethod | userEmail | createdAt |
 
 </details>
 
 ### 1.4. Adicionar o primeiro usuário admin
 
-Na aba `Usuarios`, preencha a **linha 2**:
+Na aba `Users`, preencha a **linha 2**:
 
 | A | B | C |
 |---|---|---|
@@ -339,21 +339,37 @@ O deploy transforma o Apps Script em uma API acessível via URL.
 4. Configure:
    - **Descrição**: `v1` (ou qualquer texto)
    - **Executar como**: **Eu** (sua conta Google)
-   - **Quem pode acessar**: **Qualquer pessoa**
+   - **Quem pode acessar**: **Qualquer pessoa** (importante: **não** "Qualquer pessoa com uma Conta do Google" — essa opção faz o Google bloquear requisições da API antes de chegarem ao script)
 5. Clique em **"Implantar"**
 6. Autorize o acesso quando solicitado (clique em "Revisar permissões" → sua conta → "Avançado" → "Acessar UnderMerch (não seguro)" → "Permitir")
 
-### 5.2. Copiar a URL do Web App
+### 5.2. Copiar a URL e o ID da implantação
 
-Após o deploy, copie a URL. Ela tem o formato:
+Após o deploy, copie:
 
+- **URL do Web App** — tem o formato:
+  ```
+  https://script.google.com/macros/s/AKfycbx.../exec
+  ```
+  Guarde essa URL — ela vai no `index.html` do frontend.
+
+- **Código de implantação (Deploy ID)** — é o trecho `AKfycbx...` da URL. Guarde esse ID — você vai usá-lo no CI/CD (Etapa 8).
+
+### 5.3. Testar a API
+
+Todas as requisições à API são feitas via **POST** com JSON no body (o Apps Script não suporta headers customizados, então o token de autenticação vai no body).
+
+Teste com curl ou Postman:
+
+```bash
+curl -L -X POST 'SUA_URL_DO_WEB_APP' \
+  -H 'Content-Type: application/json' \
+  -d '{"action":"login","idToken":"SEU_TOKEN_GOOGLE"}'
 ```
-https://script.google.com/macros/s/AKfycbx.../exec
-```
 
-Guarde essa URL — ela vai no `index.html` do frontend.
+> **Nota:** O Apps Script sempre retorna HTTP 200. O status real da resposta está no campo `statusCode` do JSON retornado.
 
-> **Importante:** Cada vez que você alterar o código e fizer push, é preciso criar uma **nova implantação** para que as mudanças reflitam na URL. Se quiser usar a mesma URL sempre, use **"Implantar" → "Gerenciar implantações" → "Editar"** e selecione "Nova versão" na implantação existente.
+> **Importante:** Após alterar o código e fazer push, é preciso atualizar a implantação para que as mudanças reflitam na URL. Use **"Implantar" → "Gerenciar implantações" → lápis (Editar) → Versão: "Nova versão" → Implantar**. Se configurar o CI/CD (Etapa 8), isso é feito automaticamente.
 
 ---
 
@@ -376,12 +392,12 @@ const GOOGLE_CLIENT_ID = '123456789012-abcdefghijklmnop.apps.googleusercontent.c
 Abra o `frontend/index.html` no navegador. Se estiver usando o VS Code, use a extensão **Live Server** (porta 5500).
 
 1. Clique em **"Entrar com Google"**
-2. Faça login com o e-mail que você adicionou na aba `Usuarios`
+2. Faça login com o e-mail que você adicionou na aba `Users`
 3. Se tudo funcionar, você verá a interface principal
 
 > **Problemas comuns:**
 > - **Erro de origem não autorizada:** Verifique se `http://localhost:5500` está nas Origens JavaScript autorizadas (Etapa 2.3)
-> - **Erro 403 / "Not authorized":** Verifique se seu e-mail está na aba `Usuarios` com role `admin`
+> - **Erro 403 / "Not authorized":** Verifique se seu e-mail está na aba `Users` com role `admin`
 > - **Erro de CORS:** O Apps Script retorna JSON via `ContentService`, que não suporta CORS headers. No entanto, a resposta funciona com `fetch` no modo `no-cors` ou via redirecionamento (o Apps Script redireciona GETs). Verifique se o deploy está como "Qualquer pessoa"
 
 ---
@@ -426,45 +442,46 @@ Um navegador abre pedindo permissões. Selecione **"Selecionar tudo"** e confirm
 
 ### 8.2. Adicionar os secrets no GitHub
 
-O pipeline precisa de dois secrets:
+O pipeline precisa de três secrets:
 
 | Secret | Valor | Onde encontrar |
 |--------|-------|----------------|
 | `CLASP_CREDENTIALS` | Conteúdo do `~/.clasprc.json` | Gerado pelo `bun run login` (Etapa 8.1) |
 | `SCRIPT_ID` | ID do projeto Apps Script | Etapa 3.2 (Configurações do projeto → IDs) |
+| `DEPLOY_ID` | Código de implantação | Etapa 5.2 (o trecho `AKfycbx...` da URL do Web App) |
 
 #### Opção A — Via terminal (requer [GitHub CLI](https://cli.github.com/))
 
 ```bash
 gh secret set CLASP_CREDENTIALS < ~/.clasprc.json
 gh secret set SCRIPT_ID --body "SEU_SCRIPT_ID_AQUI"
+gh secret set DEPLOY_ID --body "SEU_DEPLOY_ID_AQUI"
 ```
 
 #### Opção B — Pelo navegador
 
 1. No repositório do GitHub, vá em **Settings → Secrets and variables → Actions**
 2. Clique em **"New repository secret"**
-3. Adicione o primeiro secret:
-   - Nome: `CLASP_CREDENTIALS`
-   - Valor: cole o conteúdo inteiro do arquivo `~/.clasprc.json`:
+3. Adicione os três secrets:
+   - `CLASP_CREDENTIALS` — cole o conteúdo inteiro do arquivo `~/.clasprc.json`:
      ```bash
      cat ~/.clasprc.json
      ```
-4. Adicione o segundo secret:
-   - Nome: `SCRIPT_ID`
-   - Valor: o ID do script da Etapa 3.2
+   - `SCRIPT_ID` — o ID do script da Etapa 3.2
+   - `DEPLOY_ID` — o código de implantação da Etapa 5.2
 
 ### 8.3. Workflow do GitHub Actions
 
 O arquivo `.github/workflows/deploy.yml` já está configurado no repositório. Ele:
 
-1. Roda quando há push em `appscript/**`
+1. Roda quando há push em `appscript/**`, `.github/workflows/deploy.yml` ou `package.json`
 2. Instala o Bun e as dependências
 3. Escreve o `CLASP_CREDENTIALS` em `~/.clasprc.json`
 4. Gera o `.clasp.json` com o `SCRIPT_ID`
-5. Roda `bunx clasp push`
+5. Roda `bunx clasp push --force` (envia código + manifesto)
+6. Roda `bunx clasp deploy -i $DEPLOY_ID` (atualiza a implantação existente com a nova versão)
 
-Após configurar os secrets, qualquer push na pasta `appscript/` dispara o deploy automaticamente.
+Após configurar os secrets, qualquer push na pasta `appscript/` dispara o deploy automaticamente — **sem precisar atualizar a implantação manualmente**. A URL do Web App permanece a mesma.
 
 ---
 
@@ -508,11 +525,12 @@ Ao final do setup, você terá configurado:
 | O quê | Onde guardar |
 |-------|-------------|
 | ID da Planilha | Apps Script → Configurações → Propriedades do script → `SPREADSHEET_ID` |
-| ID do Script (Apps Script) | `.clasp.json` → `scriptId` |
+| ID do Script (Apps Script) | `.clasp.json` → `scriptId` e GitHub Secret `SCRIPT_ID` |
+| Deploy ID | GitHub Secret `DEPLOY_ID` |
 | URL do Web App | `frontend/index.html` → `APPS_SCRIPT_URL` |
 | Client ID OAuth | `frontend/index.html` → `GOOGLE_CLIENT_ID` |
-| Credenciais clasp | `~/.clasprc.json` (local) e GitHub Secret (CI/CD) |
-| Primeiro admin | Aba `Usuarios` da planilha → seu e-mail com role `admin` |
+| Credenciais clasp | `~/.clasprc.json` (local) e GitHub Secret `CLASP_CREDENTIALS` |
+| Primeiro admin | Aba `Users` da planilha → seu e-mail com role `admin` |
 
 ---
 
@@ -527,12 +545,12 @@ Ao final do setup, você terá configurado:
 ### "A API retorna erro 403"
 
 - Verifique se o deploy do Apps Script está como "Qualquer pessoa"
-- Verifique se seu e-mail está na aba `Usuarios` com a role correta
+- Verifique se seu e-mail está na aba `Users` com a role correta
 
 ### "Produtos não aparecem / dados não salvam"
 
-- Verifique se o `SPREADSHEET_ID` está correto no `utils.ts`
-- Verifique se os nomes das abas na planilha estão exatamente como: `Usuarios`, `Produtos`, `Movimentacoes`, `Vendas`
+- Verifique se o `SPREADSHEET_ID` está correto nas Propriedades do script (Etapa 4.8)
+- Verifique se os nomes das abas na planilha estão exatamente como: `Users`, `Products`, `Movements`, `Sales`
 - Verifique se os cabeçalhos estão na linha 1 de cada aba
 
 ### "clasp push dá erro de autenticação"
@@ -551,11 +569,11 @@ Ao final do setup, você terá configurado:
 
 Após o setup, o sistema está pronto para uso. Veja como operar:
 
-1. **Adicionar membros da banda:** Na aba "Usuários" do sistema, adicione os e-mails com as roles:
+1. **Adicionar membros da banda:** Na aba "Users" do sistema, adicione os e-mails com as roles:
    - `admin` — acesso total (gerenciar produtos, usuários, ver tudo)
    - `vendas` — registrar vendas e ver histórico de vendas
    - `estoque` — registrar entradas/saídas de estoque
 
-2. **Cadastrar produtos:** Na aba "Produtos", use o botão "+" para adicionar os itens de merch
+2. **Cadastrar produtos:** Na aba "Products", use o botão "+" para adicionar os itens de merch
 
-3. **Usar durante o show:** Abra o site no celular, faça login e use a aba "Vendas" para registrar vendas rapidamente
+3. **Usar durante o show:** Abra o site no celular, faça login e use a aba "Sales" para registrar vendas rapidamente

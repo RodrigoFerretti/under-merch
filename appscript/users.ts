@@ -1,17 +1,17 @@
-function getUsuarios(): GoogleAppsScript.Content.TextOutput {
-	const sheet = getSheet("Usuarios");
+function getUsers(): GoogleAppsScript.Content.TextOutput {
+	const sheet = getSheet("Users");
 	const data = sheet.getDataRange().getValues();
 
-	const usuarios = data.slice(1).map((row) => ({
+	const users = data.slice(1).map((row) => ({
 		email: row[0],
 		role: row[1],
 		createdAt: row[2],
 	}));
 
-	return createJsonResponse({ usuarios });
+	return createJsonResponse({ users });
 }
 
-function addUsuario(payload: Record<string, unknown>): GoogleAppsScript.Content.TextOutput {
+function addUser(payload: Record<string, unknown>): GoogleAppsScript.Content.TextOutput {
 	const email = String(payload.email || "")
 		.trim()
 		.toLowerCase();
@@ -28,7 +28,7 @@ function addUsuario(payload: Record<string, unknown>): GoogleAppsScript.Content.
 		return createJsonResponse({ error: `Role inválida. Use: ${validRoles.join(", ")}` }, 400);
 	}
 
-	const sheet = getSheet("Usuarios");
+	const sheet = getSheet("Users");
 	const data = sheet.getDataRange().getValues();
 
 	for (let i = 1; i < data.length; i++) {
@@ -42,7 +42,7 @@ function addUsuario(payload: Record<string, unknown>): GoogleAppsScript.Content.
 	return createJsonResponse({ success: true });
 }
 
-function removeUsuario(email: string): GoogleAppsScript.Content.TextOutput {
+function removeUser(email: string): GoogleAppsScript.Content.TextOutput {
 	const targetEmail = String(email || "")
 		.trim()
 		.toLowerCase();
@@ -51,7 +51,7 @@ function removeUsuario(email: string): GoogleAppsScript.Content.TextOutput {
 		return createJsonResponse({ error: "E-mail é obrigatório." }, 400);
 	}
 
-	const sheet = getSheet("Usuarios");
+	const sheet = getSheet("Users");
 	const data = sheet.getDataRange().getValues();
 
 	for (let i = 1; i < data.length; i++) {

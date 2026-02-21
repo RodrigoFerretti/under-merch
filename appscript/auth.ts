@@ -6,8 +6,8 @@ const PERMISSIONS: Record<string, string[]> = {
 	registerSale: ["admin", "vendas"],
 	stockIn: ["admin", "estoque"],
 	stockOut: ["admin", "estoque"],
-	getVendas: ["admin", "vendas"],
-	getMovimentacoes: ["admin", "estoque"],
+	getSales: ["admin", "vendas"],
+	getMovements: ["admin", "estoque"],
 	manageUsers: ["admin"],
 };
 
@@ -42,7 +42,7 @@ function verifyGoogleToken(idToken: string): string {
 }
 
 function checkAuth(email: string): UserInfo {
-	const sheet = getSheet("Usuarios");
+	const sheet = getSheet("Users");
 	const data = sheet.getDataRange().getValues();
 
 	for (let i = 1; i < data.length; i++) {

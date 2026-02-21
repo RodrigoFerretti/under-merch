@@ -22,17 +22,17 @@ function doPost(e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.Tex
 				checkPermission(user.role, "getProducts");
 				return getProducts();
 
-			case "getVendas":
-				checkPermission(user.role, "getVendas");
-				return getVendas();
+			case "getSales":
+				checkPermission(user.role, "getSales");
+				return getSales();
 
-			case "getMovimentacoes":
-				checkPermission(user.role, "getMovimentacoes");
-				return getMovimentacoes();
+			case "getMovements":
+				checkPermission(user.role, "getMovements");
+				return getMovements();
 
-			case "getUsuarios":
+			case "getUsers":
 				checkPermission(user.role, "manageUsers");
-				return getUsuarios();
+				return getUsers();
 
 			case "createProduct":
 				checkPermission(user.role, "createProduct");
@@ -48,23 +48,23 @@ function doPost(e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.Tex
 
 			case "registerSale":
 				checkPermission(user.role, "registerSale");
-				return registrarVenda(payload, user.email);
+				return registerSale(payload, user.email);
 
 			case "stockIn":
 				checkPermission(user.role, "stockIn");
-				return registrarEntrada(payload, user.email);
+				return registerStockIn(payload, user.email);
 
 			case "stockOut":
 				checkPermission(user.role, "stockOut");
-				return registrarSaida(payload, user.email);
+				return registerStockOut(payload, user.email);
 
-			case "addUsuario":
+			case "addUser":
 				checkPermission(user.role, "manageUsers");
-				return addUsuario(payload);
+				return addUser(payload);
 
-			case "removeUsuario":
+			case "removeUser":
 				checkPermission(user.role, "manageUsers");
-				return removeUsuario(payload.email);
+				return removeUser(payload.email);
 
 			default:
 				return createJsonResponse({ error: `Ação desconhecida: ${action}` }, 400);
