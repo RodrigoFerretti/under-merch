@@ -24,14 +24,17 @@ function createProduct(payload: Record<string, unknown>): GoogleAppsScript.Conte
 		escapeHtml(String(payload.name || "")),
 		escapeHtml(String(payload.description || "")),
 		Number(payload.price) || 0,
-		Number(payload.stock) || 0,
 		String(payload.imageId || ""),
 		true,
 		timestamp,
 		timestamp,
 	]);
 
-	return createJsonResponse({ id });
+	const skuId = generateId();
+	const skusSheet = getSheet("SKUs");
+	skusSheet.appendRow([skuId, id, "", "", 0]);
+
+	return createJsonResponse({ id, skuId });
 }
 
 function updateProduct(payload: Record<string, unknown>): GoogleAppsScript.Content.TextOutput {
@@ -46,12 +49,11 @@ function updateProduct(payload: Record<string, unknown>): GoogleAppsScript.Conte
 			if (payload.description !== undefined)
 				sheet.getRange(row, 3).setValue(escapeHtml(String(payload.description)));
 			if (payload.price !== undefined) sheet.getRange(row, 4).setValue(Number(payload.price));
-			if (payload.stock !== undefined) sheet.getRange(row, 5).setValue(Number(payload.stock));
 			if (payload.imageId !== undefined)
-				sheet.getRange(row, 6).setValue(String(payload.imageId));
+				sheet.getRange(row, 5).setValue(String(payload.imageId));
 			if (payload.active !== undefined)
-				sheet.getRange(row, 7).setValue(Boolean(payload.active));
-			sheet.getRange(row, 9).setValue(now());
+				sheet.getRange(row, 6).setValue(Boolean(payload.active));
+			sheet.getRange(row, 8).setValue(now());
 
 			return createJsonResponse({ success: true });
 		}
@@ -67,8 +69,8 @@ function deleteProduct(id: string): GoogleAppsScript.Content.TextOutput {
 	for (let i = 1; i < data.length; i++) {
 		if (data[i][0] === id) {
 			const row = i + 1;
-			sheet.getRange(row, 7).setValue(false);
-			sheet.getRange(row, 9).setValue(now());
+			sheet.getRange(row, 6).setValue(false);
+			sheet.getRange(row, 8).setValue(now());
 			return createJsonResponse({ success: true });
 		}
 	}

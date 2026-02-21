@@ -22,6 +22,22 @@ function doPost(e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.Tex
 				checkPermission(user.role, "getProducts");
 				return getProducts();
 
+			case "getSkus":
+				checkPermission(user.role, "getProducts");
+				return getSkus();
+
+			case "createSku":
+				checkPermission(user.role, "createProduct");
+				return createSku(payload);
+
+			case "updateSku":
+				checkPermission(user.role, "updateProduct");
+				return updateSku(payload);
+
+			case "deleteSku":
+				checkPermission(user.role, "deleteProduct");
+				return deleteSku(payload.id);
+
 			case "getSales":
 				checkPermission(user.role, "getSales");
 				return getSales();

@@ -47,7 +47,7 @@ O UnderMerch usa **zero servidores**. Todo o backend roda no Google Apps Script 
 
 ## Etapa 1 — Criar a Planilha (Banco de Dados)
 
-A planilha do Google Sheets funciona como banco de dados. Ela precisa de 4 abas, cada uma com colunas específicas.
+A planilha do Google Sheets funciona como banco de dados. Ela precisa de 5 abas, cada uma com colunas específicas.
 
 ### Opção A — Importar o template (recomendado)
 
@@ -59,7 +59,7 @@ O repositório inclui um arquivo Excel pronto com todas as abas e cabeçalhos:
 4. Selecione **"Substituir planilha"** e clique em **"Importar dados"**
 5. Renomeie a planilha para **"UnderMerch"** (clique no título)
 
-As 4 abas (`Users`, `Products`, `Movements`, `Sales`) já estarão criadas com os cabeçalhos corretos.
+As 5 abas (`Users`, `Products`, `SKUs`, `Movements`, `Sales`) já estarão criadas com os cabeçalhos corretos.
 
 Pule para a seção **1.4** abaixo.
 
@@ -74,13 +74,14 @@ Pule para a seção **1.4** abaixo.
 2. Clique em **"Em branco"** para criar uma nova planilha
 3. Renomeie para **"UnderMerch"** (clique no título "Planilha sem título")
 
-#### 1.2. Criar as 4 abas
+#### 1.2. Criar as 5 abas
 
 A planilha já vem com uma aba chamada "Página1". Renomeie-a e crie as demais:
 
 1. **Clique duplo** na aba "Página1" → renomeie para `Users`
 2. Clique no **"+"** no canto inferior esquerdo para criar novas abas:
    - `Products`
+   - `SKUs`
    - `Movements`
    - `Sales`
 
@@ -96,23 +97,29 @@ Em cada aba, preencha a **linha 1** com os cabeçalhos abaixo:
 |---|---|---|
 | email | role | createdAt |
 
-**Aba `Products`** (colunas A até I):
-
-| A | B | C | D | E | F | G | H | I |
-|---|---|---|---|---|---|---|---|---|
-| id | name | description | price | stock | imageId | active | createdAt | updatedAt |
-
-**Aba `Movements`** (colunas A até G):
-
-| A | B | C | D | E | F | G |
-|---|---|---|---|---|---|---|
-| id | productId | type | quantity | reason | userEmail | createdAt |
-
-**Aba `Sales`** (colunas A até H):
+**Aba `Products`** (colunas A até H):
 
 | A | B | C | D | E | F | G | H |
 |---|---|---|---|---|---|---|---|
-| id | productId | quantity | unitPrice | total | paymentMethod | userEmail | createdAt |
+| id | name | description | price | imageId | active | createdAt | updatedAt |
+
+**Aba `SKUs`** (colunas A até E):
+
+| A | B | C | D | E |
+|---|---|---|---|---|
+| id | productId | attribute | value | stock |
+
+**Aba `Movements`** (colunas A até H):
+
+| A | B | C | D | E | F | G | H |
+|---|---|---|---|---|---|---|---|
+| id | productId | skuId | type | quantity | reason | userEmail | createdAt |
+
+**Aba `Sales`** (colunas A até I):
+
+| A | B | C | D | E | F | G | H | I |
+|---|---|---|---|---|---|---|---|---|
+| id | productId | skuId | quantity | unitPrice | total | paymentMethod | userEmail | createdAt |
 
 </details>
 
@@ -550,7 +557,7 @@ Ao final do setup, você terá configurado:
 ### "Produtos não aparecem / dados não salvam"
 
 - Verifique se o `SPREADSHEET_ID` está correto nas Propriedades do script (Etapa 4.8)
-- Verifique se os nomes das abas na planilha estão exatamente como: `Users`, `Products`, `Movements`, `Sales`
+- Verifique se os nomes das abas na planilha estão exatamente como: `Users`, `Products`, `SKUs`, `Movements`, `Sales`
 - Verifique se os cabeçalhos estão na linha 1 de cada aba
 
 ### "clasp push dá erro de autenticação"
