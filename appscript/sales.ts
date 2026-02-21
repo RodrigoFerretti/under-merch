@@ -109,5 +109,10 @@ function registerSale(
 		timestamp,
 	]);
 
+	if (paymentMethod === "PIX") {
+		const pixPayload = generatePixPayload(total);
+		return createJsonResponse({ id, total, pixPayload });
+	}
+
 	return createJsonResponse({ id, total });
 }

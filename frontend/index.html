@@ -7,6 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>UnderMerch</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
   <style>
     /* === RESET & BASE === */
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -868,6 +869,65 @@
       text-align: center;
       padding: 8px 0 0;
     }
+
+    /* === PIX QR CODE MODAL === */
+    .pix-qr-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 8px 0;
+    }
+
+    .pix-qr-container canvas,
+    .pix-qr-container img,
+    .pix-qr-container table {
+      border-radius: 12px;
+      background: #fff;
+      padding: 12px;
+    }
+
+    .pix-amount {
+      font-size: 24px;
+      font-weight: 700;
+      color: #34c759;
+    }
+
+    .pix-copy-area {
+      width: 100%;
+      background: #333;
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pix-copy-text {
+      flex: 1;
+      font-size: 12px;
+      color: #aaa;
+      word-break: break-all;
+      font-family: monospace;
+      line-height: 1.4;
+      max-height: 60px;
+      overflow-y: auto;
+    }
+
+    .btn-copy {
+      background: #007aff;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+
+    .btn-copy:active { background: #0056b3; }
   </style>
 </head>
 <body>
@@ -1070,6 +1130,27 @@
       <div class="modal-footer">
         <button class="btn btn-danger" id="confirm-yes">Confirmar</button>
         <button class="btn btn-secondary" id="confirm-no">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PIX QR CODE MODAL -->
+  <div class="modal-overlay" id="modal-pix">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Pagamento PIX</h2>
+        <button class="modal-close" data-modal="modal-pix">&times;</button>
+      </div>
+      <div class="pix-qr-container">
+        <div class="pix-amount" id="pix-amount"></div>
+        <div id="pix-qr-code"></div>
+        <div class="pix-copy-area">
+          <span class="pix-copy-text" id="pix-copy-text"></span>
+          <button class="btn-copy" id="pix-copy-btn">Copiar</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="pix-close-btn">Fechar</button>
       </div>
     </div>
   </div>
@@ -1877,6 +1958,27 @@
     }
 
     // === ACTION HANDLERS ===
+    // === PIX QR CODE ===
+    function showPixQrCode(pixPayload, amount) {
+      document.getElementById('pix-amount').textContent = formatPrice(amount);
+      document.getElementById('pix-copy-text').textContent = pixPayload;
+
+      var qrContainer = document.getElementById('pix-qr-code');
+      qrContainer.innerHTML = '';
+      var qr = qrcode(0, 'M');
+      qr.addData(pixPayload);
+      qr.make();
+      qrContainer.innerHTML = qr.createSvgTag(5, 0);
+      var svg = qrContainer.querySelector('svg');
+      if (svg) {
+        svg.style.borderRadius = '12px';
+        svg.style.background = '#fff';
+        svg.style.padding = '12px';
+      }
+
+      openModal('modal-pix');
+    }
+
     async function handleRegisterSale() {
       if (!saleProductId || !saleSelectedSkuId || !salePayment) return;
 
@@ -1885,7 +1987,7 @@
       showLoading();
 
       try {
-        await api('registerSale', {
+        const result = await api('registerSale', {
           productId: saleProductId,
           skuId: saleSelectedSkuId,
           quantity: saleQty,
@@ -1898,6 +2000,10 @@
         if (state.currentProductId) renderProductDetail(state.currentProductId);
         state.salesLoaded = false;
         state.movementsLoaded = false;
+
+        if (result.pixPayload) {
+          showPixQrCode(result.pixPayload, result.total);
+        }
       } catch (err) {
         showToast('Erro: ' + err.message, 'error');
       } finally {
@@ -2274,6 +2380,29 @@
       document.getElementById('confirm-no').addEventListener('click', () => {
         closeModal('modal-confirm');
         confirmCallback = null;
+      });
+
+      // === PIX MODAL EVENTS ===
+      document.getElementById('pix-copy-btn').addEventListener('click', function() {
+        var text = document.getElementById('pix-copy-text').textContent;
+        navigator.clipboard.writeText(text).then(function() {
+          showToast('PIX copiado!', 'success');
+        }).catch(function() {
+          // Fallback for older browsers
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          showToast('PIX copiado!', 'success');
+        });
+      });
+
+      document.getElementById('pix-close-btn').addEventListener('click', function() {
+        closeModal('modal-pix');
       });
 
       // === MODAL CLOSE BUTTONS & OVERLAY CLICKS ===
