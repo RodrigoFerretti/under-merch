@@ -406,20 +406,35 @@ Volte ao Console do Google Cloud (Etapa 2.3) e confirme que a origem `https://SE
 
 Automatiza o push do código Apps Script sempre que houver mudanças na pasta `appscript/`.
 
-### 8.1. Obter as credenciais do clasp
+### 8.1. Fazer login no clasp
 
-O arquivo `~/.clasprc.json` contém suas credenciais de autenticação do clasp. Você vai precisar do conteúdo dele.
+O clasp precisa de autorização para acessar seus projetos do Apps Script:
 
 ```bash
-cat ~/.clasprc.json
+bun run login
 ```
+
+Um navegador abre pedindo permissões. Selecione **"Selecionar tudo"** e confirme. Após a autorização, as credenciais são salvas em `~/.clasprc.json`.
 
 ### 8.2. Adicionar o secret no GitHub
 
-1. No repositório, vá em **Settings → Secrets and variables → Actions**
+As credenciais do clasp precisam ser configuradas como secret no repositório para que o GitHub Actions consiga fazer deploy.
+
+#### Opção A — Via terminal (requer [GitHub CLI](https://cli.github.com/))
+
+```bash
+gh secret set CLASP_CREDENTIALS < ~/.clasprc.json
+```
+
+#### Opção B — Pelo navegador
+
+1. No repositório do GitHub, vá em **Settings → Secrets and variables → Actions**
 2. Clique em **"New repository secret"**
 3. Nome: `CLASP_CREDENTIALS`
-4. Valor: cole o conteúdo inteiro do `~/.clasprc.json`
+4. Valor: cole o conteúdo inteiro do arquivo `~/.clasprc.json`:
+   ```bash
+   cat ~/.clasprc.json
+   ```
 5. Clique em **"Add secret"**
 
 ### 8.3. Workflow do GitHub Actions
