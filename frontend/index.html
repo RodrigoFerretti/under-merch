@@ -810,6 +810,38 @@
       flex-shrink: 0;
     }
 
+    /* === IMAGE LIGHTBOX === */
+    .lightbox-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.9);
+      z-index: 400;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .lightbox-overlay.active { display: flex; }
+
+    .lightbox-img {
+      max-width: 95%;
+      max-height: 90vh;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 32px;
+      cursor: pointer;
+      padding: 8px;
+    }
+
     /* === CONFIRM MODAL === */
     .confirm-message {
       font-size: 15px;
@@ -1017,6 +1049,12 @@
         <button class="btn btn-secondary" id="confirm-no">Cancelar</button>
       </div>
     </div>
+  </div>
+
+  <!-- IMAGE LIGHTBOX -->
+  <div class="lightbox-overlay" id="lightbox">
+    <img class="lightbox-img" id="lightbox-img" alt="">
+    <button class="lightbox-close" id="lightbox-close">&times;</button>
   </div>
 
   <!-- TOAST -->
@@ -1241,7 +1279,6 @@
         setupNav();
         await loadInitialData();
         showView('view-products');
-        showToast('Bem-vindo!', 'success');
       } catch (err) {
         loginError.textContent = 'Erro ao fazer login: ' + err.message;
         loginError.style.display = 'block';
@@ -1427,7 +1464,6 @@
       }
       if (isAdmin()) {
         html += '<button class="btn btn-primary" id="btn-edit-product">Editar</button>';
-        html += '<button class="btn btn-danger" id="btn-deactivate-product">Desativar</button>';
       }
       html += '</div></div>';
 
@@ -1893,20 +1929,6 @@
       });
     }
 
-    async function handleDeactivateProduct(productId) {
-      openConfirmModal('Desativar este produto?', async () => {
-        try {
-          await api('deleteProduct', { id: productId });
-          showToast('Produto desativado.', 'success');
-          await refreshProducts();
-          renderProducts();
-          showView('view-products');
-        } catch (err) {
-          showToast('Erro: ' + err.message, 'error');
-        }
-      });
-    }
-
     // === EVENT LISTENERS ===
     document.addEventListener('DOMContentLoaded', init);
 
@@ -1933,8 +1955,23 @@
         showView('view-product-detail');
       });
 
+      // Lightbox
+      document.getElementById('lightbox').addEventListener('click', e => {
+        if (e.target === e.currentTarget || e.target.id === 'lightbox-close') {
+          document.getElementById('lightbox').classList.remove('active');
+        }
+      });
+
       // Product detail delegated events
       document.getElementById('product-detail-content').addEventListener('click', e => {
+        // Hero image click → lightbox
+        const heroImg = e.target.closest('#detail-hero-img');
+        if (heroImg && heroImg.tagName === 'IMG' && detailImageId) {
+          const lb = document.getElementById('lightbox');
+          document.getElementById('lightbox-img').src = imageUrl(detailImageId, 1200);
+          lb.classList.add('active');
+          return;
+        }
         // Back button
         if (e.target.closest('#detail-back-btn')) {
           state.currentProductId = null;
@@ -1949,11 +1986,6 @@
         // Edit product
         if (e.target.id === 'btn-edit-product') {
           openProductModal('edit', state.currentProductId);
-          return;
-        }
-        // Deactivate product
-        if (e.target.id === 'btn-deactivate-product') {
-          handleDeactivateProduct(state.currentProductId);
           return;
         }
         // SKU row click to select and preview image
