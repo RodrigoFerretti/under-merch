@@ -1,0 +1,23 @@
+name: Deploy Apps Script
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'appscript/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - run: bun install
+
+      - name: Write clasp credentials
+        run: echo '${{ secrets.CLASP_CREDENTIALS }}' > ~/.clasprc.json
+
+      - name: Push to Apps Script
+        run: bunx clasp push

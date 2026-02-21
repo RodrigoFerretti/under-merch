@@ -6,8 +6,32 @@ Guia completo para configurar sua própria instância do UnderMerch. Ao final, v
 
 - Conta Google (Gmail)
 - Conta no GitHub
-- Node.js instalado (v18+)
 - Git instalado
+- [nvm](https://github.com/nvm-sh/nvm) instalado (gerenciador de versões do Node.js)
+- [Bun](https://bun.sh/) instalado (gerenciador de pacotes)
+
+### Instalando nvm e Node.js
+
+Se ainda não tem o nvm, instale com:
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+```
+
+Depois, na raiz do projeto, rode:
+
+```bash
+nvm install    # instala a versão do .nvmrc (Node 22 LTS)
+nvm use        # ativa essa versão
+```
+
+### Instalando Bun
+
+```bash
+curl -fsSL https://bun.sh/install | bash
+```
+
+Bun é o gerenciador de pacotes do projeto (substitui npm/yarn). Ele é usado para instalar dependências e rodar scripts.
 
 ## Visão Geral da Arquitetura
 
@@ -239,23 +263,30 @@ O `clasp` (Command Line Apps Script) permite fazer push de código TypeScript pa
    cd under-merch
    ```
 
-### 4.2. Instalar as dependências
+### 4.2. Configurar a versão do Node.js
 
 ```bash
-npm install
+nvm install   # instala o Node 22 LTS (definido no .nvmrc)
+nvm use       # ativa essa versão
 ```
 
-Isso instala o `clasp` e os tipos TypeScript para Google Apps Script.
-
-### 4.3. Fazer login no clasp
+### 4.3. Instalar as dependências
 
 ```bash
-npx clasp login
+bun install
+```
+
+Isso instala o `clasp` (ferramenta de deploy para Apps Script), o `biome` (linter e formatador) e os tipos TypeScript para Google Apps Script.
+
+### 4.4. Fazer login no clasp
+
+```bash
+bunx clasp login
 ```
 
 Um navegador abre para autenticar com sua conta Google. Após a autorização, o clasp salva as credenciais localmente em `~/.clasprc.json`.
 
-### 4.4. Configurar o `.clasp.json`
+### 4.5. Configurar o `.clasp.json`
 
 Edite o arquivo `.clasp.json` na raiz do projeto e coloque o ID do script que você anotou na Etapa 3.2:
 
@@ -266,17 +297,17 @@ Edite o arquivo `.clasp.json` na raiz do projeto e coloque o ID do script que vo
 }
 ```
 
-### 4.5. Fazer push do código
+### 4.6. Fazer push do código
 
 ```bash
-npx clasp push
+bunx clasp push
 ```
 
 O clasp transpila os arquivos `.ts` para `.gs` e envia para o Google Apps Script. Se tudo deu certo, você verá os arquivos no editor web do Apps Script.
 
-> **Dica:** Use `npx clasp push --watch` para fazer push automático a cada salvamento.
+> **Dica:** Use `bunx clasp push --watch` para fazer push automático a cada salvamento.
 
-### 4.6. Configurar o ID da planilha no código
+### 4.7. Configurar o ID da planilha no código
 
 No arquivo `appscript/utils.ts`, localize a constante `SPREADSHEET_ID` e substitua pelo ID da sua planilha (da Etapa 1.5):
 
@@ -284,7 +315,7 @@ No arquivo `appscript/utils.ts`, localize a constante `SPREADSHEET_ID` e substit
 const SPREADSHEET_ID = 'SEU_ID_DA_PLANILHA_AQUI';
 ```
 
-Faça push novamente: `npx clasp push`
+Faça push novamente: `bunx clasp push`
 
 ---
 
@@ -396,9 +427,9 @@ cat ~/.clasprc.json
 O arquivo `.github/workflows/deploy.yml` já está configurado no repositório. Ele:
 
 1. Roda quando há push em `appscript/**`
-2. Instala o Node.js e as dependências
+2. Instala o Bun e as dependências
 3. Escreve o `CLASP_CREDENTIALS` em `~/.clasprc.json`
-4. Roda `npx clasp push`
+4. Roda `bunx clasp push`
 
 Após configurar o secret, qualquer push na pasta `appscript/` dispara o deploy automaticamente.
 
@@ -473,7 +504,7 @@ Ao final do setup, você terá configurado:
 
 ### "clasp push dá erro de autenticação"
 
-- Rode `npx clasp login` novamente
+- Rode `bunx clasp login` novamente
 - Verifique se o `scriptId` no `.clasp.json` está correto
 
 ### "Imagem do produto não aparece"
