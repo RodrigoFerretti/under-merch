@@ -314,15 +314,16 @@ O clasp transpila os arquivos `.ts` para `.gs` e envia para o Google Apps Script
 
 > **Dica:** Use `bunx clasp push --watch` para fazer push automático a cada salvamento.
 
-### 4.8. Configurar o ID da planilha no código
+### 4.8. Configurar o ID da planilha no Apps Script
 
-No arquivo `appscript/utils.ts`, localize a constante `SPREADSHEET_ID` e substitua pelo ID da sua planilha (da Etapa 1.5):
+O ID da planilha é configurado como **propriedade do script** (não precisa alterar código):
 
-```typescript
-const SPREADSHEET_ID = 'SEU_ID_DA_PLANILHA_AQUI';
-```
-
-Faça push novamente: `bunx clasp push`
+1. No editor do Apps Script, vá em **Configurações do projeto** (ícone de engrenagem no menu lateral)
+2. Role até **"Propriedades do script"**
+3. Clique em **"Adicionar propriedade do script"**
+4. Propriedade: `SPREADSHEET_ID`
+5. Valor: o ID da planilha da Etapa 1.5
+6. Clique em **"Salvar propriedades do script"**
 
 ---
 
@@ -506,7 +507,7 @@ Ao final do setup, você terá configurado:
 
 | O quê | Onde guardar |
 |-------|-------------|
-| ID da Planilha | `appscript/utils.ts` → `SPREADSHEET_ID` |
+| ID da Planilha | Apps Script → Configurações → Propriedades do script → `SPREADSHEET_ID` |
 | ID do Script (Apps Script) | `.clasp.json` → `scriptId` |
 | URL do Web App | `frontend/index.html` → `APPS_SCRIPT_URL` |
 | Client ID OAuth | `frontend/index.html` → `GOOGLE_CLIENT_ID` |
