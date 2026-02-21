@@ -103,11 +103,11 @@ Em cada aba, preencha a **linha 1** com os cabeçalhos abaixo:
 |---|---|---|---|---|---|---|---|
 | id | name | description | price | imageId | active | createdAt | updatedAt |
 
-**Aba `SKUs`** (colunas A até E):
+**Aba `SKUs`** (colunas A até F):
 
-| A | B | C | D | E |
-|---|---|---|---|---|
-| id | productId | attribute | value | stock |
+| A | B | C | D | E | F |
+|---|---|---|---|---|---|
+| id | productId | attribute | value | stock | imageId |
 
 **Aba `Movements`** (colunas A até H):
 

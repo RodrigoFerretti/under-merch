@@ -36,7 +36,7 @@ function createProduct(payload: Record<string, unknown>): GoogleAppsScript.Conte
 
 	if (variants.length === 0) {
 		const skuId = generateId("s", "SKUs");
-		skusSheet.appendRow([skuId, id, "", "", 0]);
+		skusSheet.appendRow([skuId, id, "", "", 0, ""]);
 		skuIds.push(skuId);
 	} else {
 		for (const v of variants) {
@@ -47,6 +47,7 @@ function createProduct(payload: Record<string, unknown>): GoogleAppsScript.Conte
 				escapeHtml(String(v.attribute || "")),
 				escapeHtml(String(v.value || "")),
 				Number(v.stock) || 0,
+				String(v.imageId || ""),
 			]);
 			skuIds.push(skuId);
 		}

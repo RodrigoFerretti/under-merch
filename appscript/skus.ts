@@ -29,6 +29,7 @@ function createSku(payload: Record<string, unknown>): GoogleAppsScript.Content.T
 		escapeHtml(String(payload.attribute || "")),
 		escapeHtml(String(payload.value || "")),
 		Number(payload.stock) || 0,
+		String(payload.imageId || ""),
 	]);
 
 	return createJsonResponse({ id });
@@ -44,6 +45,7 @@ function updateSku(payload: Record<string, unknown>): GoogleAppsScript.Content.T
 			if (payload.value !== undefined)
 				sheet.getRange(row, 4).setValue(escapeHtml(String(payload.value)));
 			if (payload.stock !== undefined) sheet.getRange(row, 5).setValue(Number(payload.stock));
+			if (payload.imageId !== undefined) sheet.getRange(row, 6).setValue(String(payload.imageId));
 
 			return createJsonResponse({ success: true });
 		}
