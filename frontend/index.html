@@ -970,8 +970,11 @@
         <input class="input" id="product-price-input" type="number" step="0.01" min="0" placeholder="Preço (R$)">
         <input class="input" id="product-image-input" placeholder="Imagem do produto (link ou ID do Google Drive)">
         <div id="product-sku-images-section" style="display:none">
-          <div class="modal-label">Imagens das Variantes</div>
+          <div class="modal-label">Variantes</div>
           <div id="sku-image-rows"></div>
+          <div class="modal-label" style="margin-top:12px">Adicionar Variantes</div>
+          <div id="sku-new-rows"></div>
+          <button class="btn btn-secondary" id="add-edit-sku-row" style="font-size:13px;padding:8px 14px">+ Variante</button>
         </div>
         <div id="product-sku-section">
           <div class="modal-label">Variantes</div>
@@ -984,6 +987,7 @@
             <input class="input" id="product-sku-image-input" placeholder="Imagem do SKU (link ou ID do Drive)">
           </div>
           <div id="sku-variants-section" style="display:none">
+            <input class="input" id="sku-variant-name-input" placeholder="Nome da variação (ex: Tamanho, Cor)">
             <div id="sku-rows"></div>
             <button class="btn btn-secondary" id="add-sku-row" style="font-size:13px;padding:8px 14px">+ Variante</button>
           </div>
@@ -1687,22 +1691,19 @@
         document.getElementById('product-desc-input').value = p.description || '';
         document.getElementById('product-price-input').value = p.price || '';
         document.getElementById('product-image-input').value = p.imageId || '';
-        // Show SKU image editing
+        // Show SKU editing
         const skus = getProductSkus(productId);
         const skuImgSection = document.getElementById('product-sku-images-section');
         const skuImgRows = document.getElementById('sku-image-rows');
-        if (skus.length > 0) {
-          skuImgSection.style.display = '';
-          skuImgRows.innerHTML = skus.map(sku => {
-            const label = hasVariants(productId) ? escapeHtml((sku.attribute ? sku.attribute + ': ' : '') + (sku.value || '')) : 'SKU padrão';
-            return '<div class="sku-form-row" data-sku-id="' + sku.id + '">'
-              + '<span style="font-size:13px;color:#ccc;min-width:80px">' + label + '</span>'
-              + '<input class="input sku-edit-img" value="' + escapeHtml(sku.imageId || '') + '" placeholder="Imagem (link ou ID do Drive)">'
-              + '</div>';
-          }).join('');
-        } else {
-          skuImgSection.style.display = 'none';
-        }
+        skuImgSection.style.display = '';
+        skuImgRows.innerHTML = skus.map(sku => {
+          const label = hasVariants(productId) ? escapeHtml((sku.attribute ? sku.attribute + ': ' : '') + (sku.value || '')) : 'SKU padrão';
+          return '<div class="sku-form-row" data-sku-id="' + sku.id + '">'
+            + '<span style="font-size:13px;color:#ccc;min-width:80px">' + label + '</span>'
+            + '<input class="input sku-edit-img" value="' + escapeHtml(sku.imageId || '') + '" placeholder="Imagem (link ou ID do Drive)">'
+            + '</div>';
+        }).join('');
+        document.getElementById('sku-new-rows').innerHTML = '';
       } else {
         document.getElementById('product-sku-images-section').style.display = 'none';
         document.getElementById('product-name-input').value = '';
@@ -1712,6 +1713,7 @@
         document.getElementById('product-stock-input').value = '0';
         document.getElementById('product-sku-image-input').value = '';
         document.getElementById('sku-rows').innerHTML = '';
+        document.getElementById('sku-variant-name-input').value = '';
         // Reset to simple mode
         document.getElementById('sku-mode-simple').classList.add('active');
         document.getElementById('sku-mode-variants').classList.remove('active');
@@ -1726,8 +1728,7 @@
       const container = document.getElementById('sku-rows');
       const row = document.createElement('div');
       row.className = 'sku-form-row';
-      row.innerHTML = '<input class="input sku-attr" placeholder="Atributo (ex: Tamanho)">'
-        + '<input class="input sku-val" placeholder="Valor (ex: M)">'
+      row.innerHTML = '<input class="input sku-val" placeholder="Variação (ex: M)">'
         + '<input class="input sku-stk" type="number" min="0" value="0" placeholder="Qtd">'
         + '<input class="input sku-img" placeholder="Imagem" style="max-width:100px">'
         + '<button class="btn-remove-row">&times;</button>';
@@ -1813,19 +1814,31 @@
               await api('updateSku', { id: skuId, imageId: extractedImg });
             }
           }
+          // Create new SKUs
+          const newSkuRows = document.querySelectorAll('#sku-new-rows .sku-form-row');
+          const existingSkus = getProductSkus(productEditId);
+          const existingAttr = existingSkus.length > 0 ? (existingSkus[0].attribute || '') : '';
+          for (const row of newSkuRows) {
+            const val = row.querySelector('.sku-val').value.trim();
+            const stk = parseInt(row.querySelector('.sku-stk').value) || 0;
+            const img = extractDriveId(row.querySelector('.sku-img').value.trim());
+            if (val) {
+              await api('createSku', { productId: productEditId, attribute: existingAttr, value: val, stock: stk, imageId: img });
+            }
+          }
           showToast('Produto atualizado!', 'success');
         } else {
           // Build SKUs
           const skus = [];
           const isVariantMode = document.getElementById('sku-mode-variants').classList.contains('active');
           if (isVariantMode) {
+            const variantName = document.getElementById('sku-variant-name-input').value.trim();
             const rows = document.querySelectorAll('#sku-rows .sku-form-row');
             rows.forEach(row => {
-              const attr = row.querySelector('.sku-attr').value.trim();
               const val = row.querySelector('.sku-val').value.trim();
               const stk = parseInt(row.querySelector('.sku-stk').value) || 0;
               const img = extractDriveId(row.querySelector('.sku-img').value.trim());
-              if (val) skus.push({ attribute: attr, value: val, stock: stk, imageId: img });
+              if (val) skus.push({ attribute: variantName, value: val, stock: stk, imageId: img });
             });
             if (skus.length === 0) { showToast('Adicione ao menos uma variante.', 'error'); btn.disabled = false; btn.textContent = 'Salvar'; return; }
           } else {
@@ -2094,7 +2107,24 @@
 
       document.getElementById('add-sku-row').addEventListener('click', addSkuRow);
 
+      document.getElementById('add-edit-sku-row').addEventListener('click', () => {
+        const container = document.getElementById('sku-new-rows');
+        const row = document.createElement('div');
+        row.className = 'sku-form-row';
+        row.innerHTML = '<input class="input sku-val" placeholder="Variação (ex: M)">'
+          + '<input class="input sku-stk" type="number" min="0" value="0" placeholder="Qtd">'
+          + '<input class="input sku-img" placeholder="Imagem" style="max-width:100px">'
+          + '<button class="btn-remove-row">&times;</button>';
+        container.appendChild(row);
+      });
+
       document.getElementById('sku-rows').addEventListener('click', e => {
+        if (e.target.closest('.btn-remove-row')) {
+          e.target.closest('.sku-form-row').remove();
+        }
+      });
+
+      document.getElementById('sku-new-rows').addEventListener('click', e => {
         if (e.target.closest('.btn-remove-row')) {
           e.target.closest('.sku-form-row').remove();
         }
