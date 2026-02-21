@@ -1220,7 +1220,10 @@
       });
       const data = await response.json();
       if (data.statusCode === 401) {
-        logout();
+        // Try silent re-auth before logging out
+        if (typeof google !== 'undefined' && google.accounts) {
+          google.accounts.id.prompt();
+        }
         showToast('Sessão expirada. Faça login novamente.', 'error');
         throw new Error('Unauthorized');
       }
@@ -1280,11 +1283,16 @@
       google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: handleCredentialResponse,
+        auto_select: true,
       });
       google.accounts.id.renderButton(
         document.getElementById('google-signin-btn'),
         { theme: 'filled_blue', size: 'large', width: 280 }
       );
+      // If we have a stored session, try to silently get a fresh token
+      if (state.email) {
+        google.accounts.id.prompt();
+      }
     }
 
     async function handleCredentialResponse(response) {
@@ -1336,12 +1344,13 @@
 
     async function checkSession() {
       if (state.idToken && state.email && state.role) {
+        setupNav();
+        showView('view-products');
         try {
-          setupNav();
           await loadInitialData();
-          showView('view-products');
         } catch {
-          logout();
+          // Token likely expired — don't logout immediately,
+          // Google auto_select/prompt will try to refresh it silently
         }
         return;
       }
@@ -1568,8 +1577,8 @@
         const sku = state.skus.find(s => s.id === m.skuId);
         const pName = product ? escapeHtml(product.name) : m.productId;
         const variant = sku && sku.value ? ' (' + escapeHtml(sku.value) + ')' : '';
-        const dirClass = m.direction === 'in' ? 'movement-in' : 'movement-out';
-        const sign = m.direction === 'in' ? '+' : '-';
+        const dirClass = m.type === 'in' ? 'movement-in' : 'movement-out';
+        const sign = m.type === 'in' ? '+' : '-';
         return '<div class="movement-item">'
           + '<div>'
           + '<div class="movement-info">' + pName + variant + '</div>'
