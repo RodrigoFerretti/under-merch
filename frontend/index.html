@@ -1242,6 +1242,9 @@
       });
 
       state.currentView = viewId;
+      if (viewId !== 'view-login') {
+        localStorage.setItem('currentView', viewId);
+      }
 
       // Toggle header + nav
       const loggedIn = viewId !== 'view-login';
@@ -1336,12 +1339,25 @@
 
     async function checkSession() {
       if (state.idToken && state.email && state.role) {
+        setupNav();
+        const savedView = localStorage.getItem('currentView') || 'view-products';
+        showView(savedView);
+        showLoading();
         try {
-          setupNav();
-          showView('view-products');
           await loadInitialData();
+          // Restore product detail if needed
+          if (savedView === 'view-product-detail') {
+            const pid = localStorage.getItem('currentProductId');
+            if (pid) {
+              renderProductDetail(pid);
+            } else {
+              showView('view-products');
+            }
+          }
         } catch {
           // Token expired — api() already called logout() on 401
+        } finally {
+          hideLoading();
         }
         return;
       }
@@ -1443,6 +1459,7 @@
       }
 
       state.currentProductId = productId;
+      localStorage.setItem('currentProductId', productId);
       detailImageId = getProductImage(productId);
       const skus = getProductSkus(productId);
       const showVariants = hasVariants(productId);
@@ -2012,6 +2029,7 @@
         // Back button
         if (e.target.closest('#detail-back-btn')) {
           state.currentProductId = null;
+          localStorage.removeItem('currentProductId');
           showView('view-products');
           return;
         }
