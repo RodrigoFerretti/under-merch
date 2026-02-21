@@ -76,7 +76,7 @@ function registerSale(
 	}
 
 	const total = unitPrice * quantity;
-	const id = generateId();
+	const id = generateId("v", "Sales");
 	const timestamp = now();
 
 	// 1. Register sale
@@ -99,7 +99,7 @@ function registerSale(
 	// 3. Register movement
 	const movementsSheet = getSheet("Movements");
 	movementsSheet.appendRow([
-		generateId(),
+		generateId("m", "Movements"),
 		productId,
 		skuId,
 		"out",

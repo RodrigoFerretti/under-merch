@@ -16,7 +16,7 @@ function getProducts(): GoogleAppsScript.Content.TextOutput {
 
 function createProduct(payload: Record<string, unknown>): GoogleAppsScript.Content.TextOutput {
 	const sheet = getSheet("Products");
-	const id = generateId();
+	const id = generateId("p", "Products");
 	const timestamp = now();
 
 	sheet.appendRow([
@@ -30,7 +30,7 @@ function createProduct(payload: Record<string, unknown>): GoogleAppsScript.Conte
 		timestamp,
 	]);
 
-	const skuId = generateId();
+	const skuId = generateId("s", "SKUs");
 	const skusSheet = getSheet("SKUs");
 	skusSheet.appendRow([skuId, id, "", "", 0]);
 

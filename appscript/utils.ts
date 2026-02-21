@@ -20,8 +20,17 @@ function getSheet(name: string): GoogleAppsScript.Spreadsheet.Sheet {
 	return sheet;
 }
 
-function generateId(): string {
-	return Utilities.getUuid();
+function generateId(prefix: string, sheetName: string): string {
+	const sheet = getSheet(sheetName);
+	const lastRow = sheet.getLastRow();
+
+	if (lastRow <= 1) {
+		return `${prefix}001`;
+	}
+
+	const lastId = String(sheet.getRange(lastRow, 1).getValue());
+	const num = Number.parseInt(lastId.replace(/\D/g, ""), 10) || 0;
+	return `${prefix}${String(num + 1).padStart(3, "0")}`;
 }
 
 function now(): string {

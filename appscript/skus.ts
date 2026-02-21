@@ -21,7 +21,7 @@ function createSku(payload: Record<string, unknown>): GoogleAppsScript.Content.T
 	}
 
 	const sheet = getSheet("SKUs");
-	const id = generateId();
+	const id = generateId("s", "SKUs");
 
 	sheet.appendRow([
 		id,

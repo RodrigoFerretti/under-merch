@@ -54,7 +54,7 @@ function registerStockIn(
 	// Register movement
 	const movementsSheet = getSheet("Movements");
 	movementsSheet.appendRow([
-		generateId(),
+		generateId("m", "Movements"),
 		productId,
 		skuId,
 		"in",
@@ -114,7 +114,7 @@ function registerStockOut(
 	// Register movement
 	const movementsSheet = getSheet("Movements");
 	movementsSheet.appendRow([
-		generateId(),
+		generateId("m", "Movements"),
 		productId,
 		skuId,
 		"out",
