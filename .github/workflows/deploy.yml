@@ -26,3 +26,6 @@ jobs:
 
       - name: Push to Apps Script
         run: bunx clasp push --force
+
+      - name: Update deployment
+        run: bunx clasp deploy -i ${{ secrets.DEPLOY_ID }} -d "Auto deploy"
