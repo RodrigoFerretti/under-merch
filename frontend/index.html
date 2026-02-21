@@ -1220,10 +1220,7 @@
       });
       const data = await response.json();
       if (data.statusCode === 401) {
-        // Try silent re-auth before logging out
-        if (typeof google !== 'undefined' && google.accounts) {
-          google.accounts.id.prompt();
-        }
+        logout();
         showToast('Sessão expirada. Faça login novamente.', 'error');
         throw new Error('Unauthorized');
       }
@@ -1283,16 +1280,11 @@
       google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: handleCredentialResponse,
-        auto_select: true,
       });
       google.accounts.id.renderButton(
         document.getElementById('google-signin-btn'),
         { theme: 'filled_blue', size: 'large', width: 280 }
       );
-      // If we have a stored session, try to silently get a fresh token
-      if (state.email) {
-        google.accounts.id.prompt();
-      }
     }
 
     async function handleCredentialResponse(response) {
@@ -1344,13 +1336,12 @@
 
     async function checkSession() {
       if (state.idToken && state.email && state.role) {
-        setupNav();
-        showView('view-products');
         try {
+          setupNav();
+          showView('view-products');
           await loadInitialData();
         } catch {
-          // Token likely expired — don't logout immediately,
-          // Google auto_select/prompt will try to refresh it silently
+          // Token expired — api() already called logout() on 401
         }
         return;
       }
