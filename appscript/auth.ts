@@ -41,13 +41,22 @@ function verifyGoogleToken(idToken: string): string {
 	return data.email;
 }
 
+function updateLastAccess(email: string, row: number): void {
+	const cache = CacheService.getScriptCache();
+	const key = `lastAccess_${email}`;
+	if (cache.get(key)) return;
+	cache.put(key, "1", 60);
+	const sheet = getSheet("Users");
+	sheet.getRange(row, 4).setValue(now());
+}
+
 function checkAuth(email: string): UserInfo {
 	const sheet = getSheet("Users");
 	const data = sheet.getDataRange().getValues();
 
 	for (let i = 1; i < data.length; i++) {
 		if (data[i][0] === email) {
-			sheet.getRange(i + 1, 4).setValue(now());
+			updateLastAccess(email, i + 1);
 			return { email: data[i][0], role: data[i][1] };
 		}
 	}
