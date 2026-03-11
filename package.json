@@ -9,10 +9,12 @@
 		"login": "clasp login",
 		"lint": "biome check .",
 		"lint:fix": "biome check --fix .",
-		"format": "biome format --write ."
+		"format": "biome format --write .",
+		"report:pdf": "npx md-to-pdf reports/relatorio.pex.md"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.0",
+		"md-to-pdf": "^5.2.4",
 		"@google/clasp": "^2.4.2",
 		"@types/google-apps-script": "^1.0.83"
 	}
